@@ -1,2 +1,2 @@
-# centrify-aws-cli-utilities
+# aws-cli-utilities
 AWS CLI tools for Idaptive
