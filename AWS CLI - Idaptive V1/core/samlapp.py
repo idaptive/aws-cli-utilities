@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from core import cenrest, cenauth
+from core import restclient, auth
 from core.htmlresponse import HtmlResponse
 import base64
 import xml.etree.ElementTree as ET
@@ -34,20 +34,20 @@ def handle_app_click(session, appkey, version, environment, proxy):
     headers = {}
     session_token = "Bearer "+session.session_token
     headers['Authorization'] = session_token
-    response = cenrest.call_rest_post(session.endpoint, method, body, headers, environment.get_certpath(), proxy, environment.get_debug())
+    response = restclient.call_rest_post(session.endpoint, method, body, headers, environment.get_certpath(), proxy, environment.get_debug())
     logging.info("Call App Response URL : " + response.url)
     if ('elevate' in response.url):
         url = response.url
         parsed_url = urlparse.urlparse(url)
         elav = urlparse.parse_qs(parsed_url.query)['elevate'][0]
         chal = urlparse.parse_qs(parsed_url.query)['challengeId'][0]
-        ele_session = cenauth.elevate(session, appkey, headers, response, version, environment, proxy)
+        ele_session = auth.elevate(session, appkey, headers, response, version, environment, proxy)
         ele_token = "Bearer "+ele_session.session_token
         headers['Authorization'] = ele_token
         headers['X-CFY-CHALLENGEID'] = chal
         body['ChallengeStateId'] = chal
         json_body = json.dumps(body)
-        response = cenrest.call_rest_post(session.endpoint, method, json_body, headers, environment.get_certpath(), proxy, environment.get_debug())
+        response = restclient.call_rest_post(session.endpoint, method, json_body, headers, environment.get_certpath(), proxy, environment.get_debug())
         logging.info("Call App Response URL - After Elevate : " + response.url)
     return response
 

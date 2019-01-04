@@ -28,7 +28,7 @@ function GetAWSApps {
     $restArg = @{};
     Write-Verbose("Invoking getupdata")
 	$restResult = InvokeREST -Method "/uprest/getupdata" -Endpoint $token.Endpoint -Token $token.BearerToken -IncludeSessionInResult $True
-    Write-Verbose("Invokation complete")
+    Write-Verbose("Invocation complete")
 	$awsapps = $restResult.RestResult.Result.Apps.where{($_.TemplateName -Like "*Amazon*" -Or $_.TemplateName -Like "*AWS*") -And $_.WebAppType -ne "UsernamePassword"}
     Write-Verbose("Received AWS Apps " + $awsapps)
 	$global:websession = $restResult.websession

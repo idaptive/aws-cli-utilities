@@ -13,8 +13,8 @@
 # limitations under the License.
 
 #Version 8.1
-from core import cenauth
-from core import cenapp
+from core import auth
+from core import samlapp
 from aws import assumerolesaml
 import logging
 from config import readconfig
@@ -41,7 +41,7 @@ def get_environment(args):
 def login_instance(proxy, environment):
     user = input('Please enter your username : ')
     version = "1.0"
-    session = cenauth.interactive_login(user, version, proxy, environment)
+    session = auth.interactive_login(user, version, proxy, environment)
     return session, user
 
 def set_logging():
@@ -125,9 +125,9 @@ def client_main():
         appkey = awsapps[int(number)-1]['AppKey']
         display_name = awsapps[int(number)-1]['DisplayName']
         print("Calling app with key : " + appkey)
-        encoded_saml = cenapp.call_app(session, appkey, "1.0", environment, proxy)
+        encoded_saml = samlapp.call_app(session, appkey, "1.0", environment, proxy)
         while(True):
-            _quit, awsinputs = cenapp.choose_role(encoded_saml, appkey)
+            _quit, awsinputs = samlapp.choose_role(encoded_saml, appkey)
             if (_quit == 'q'):
                 break;
             count = profilecount [int(number)-1]

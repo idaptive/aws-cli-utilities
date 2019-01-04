@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import json
-from core import cenrest
+from core import restclient
 import logging
 def get_applications(user, session, environment, proxy):
     method = "/uprest/getupdata"
@@ -23,7 +23,7 @@ def get_applications(user, session, environment, proxy):
     headers['Content-type'] = 'application/json'
     session_token = "Bearer "+session.session_token
     headers['Authorization'] = session_token
-    response = cenrest.call_rest_post(session.endpoint, method, body, headers, environment.get_certpath(), proxy,environment.get_debug())
+    response = restclient.call_rest_post(session.endpoint, method, body, headers, environment.get_certpath(), proxy,environment.get_debug())
     logging.info(response.text)
     return response.json()
 

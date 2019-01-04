@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from core.cenrest import call_rest_post
+from core.restclient import call_rest_post
 from core.authrequest import AuthRequest
 from core.authresponse import AuthResponse
 from core.adv_authrequest import AdvAuthRequest
 from getpass import getpass
-from core.cenauthsession import AuthSession
+from core.authsession import AuthSession
 import logging
 import sys
 import time
