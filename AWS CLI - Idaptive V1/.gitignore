@@ -1,0 +1,14 @@
+# Log files
+*.log
+
+# Certificates
+*.pem
+
+# Proxy configuration
+proxy.properties
+
+# Python cache
+**/*.pyc
+
+# MISC
+changes.txt

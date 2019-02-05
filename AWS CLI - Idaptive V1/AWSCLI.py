@@ -27,8 +27,8 @@ import traceback
 
 def get_environment(args):
     tenant = args.tenant
-    if ("idaptive.com" not in tenant and "centrify.com" not in tenant):
-        tenant = tenant + ".idaptive.com"
+    if ("idaptive." not in tenant and "centrify.com" not in tenant):
+        tenant = tenant + ".centrify.com"
     name = tenant.split(".")[0]
     tenant = "https://" + tenant
     cert = "cacerts_" + name + ".pem"
