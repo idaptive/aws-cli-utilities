@@ -1,4 +1,4 @@
-# Copyright 2018 Centrify Corporation
+# Copyright 2019 IDaptive, LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ function Init-Authenticate([string]$Tenant="cloud", [string]$Location)
     if ($VerbosePreference -eq "Continue") {
          Write-Host "Making debug on. Note that it will log incoming and outgoing REST messages which can contain sensetive information" -foregroundcolor "red"
     }
-	if ($Tenant -NotLike "*.centrify.com" -and $Tenant -NotLike "*.idaptive.com") {
-		$Tenant = $($Tenant)+".idaptive.com"
+	if ($Tenant -NotLike "*.centrify.com" -and $Tenant -NotLike "*.idaptive.") {
+		$Tenant = $($Tenant)+".centrify.com"
 	}
     if (!$Region) {
 #        Write-Host "Using default region us-west-2"
