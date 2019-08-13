@@ -20,12 +20,12 @@ Import-Module .\PowerShell.REST.psm1 3>$null 4>$null -force
 $enableVerbose = ($PSBoundParameters['Verbose'] -eq $true)
 
 
-function Init-Authenticate([string]$Tenant="cloud", [string]$Location) 
+function Init-Authenticate([string]$Tenant="pod0.idaptive.app", [string]$Location) 
 {
     if ($VerbosePreference -eq "Continue") {
          Write-Host "Making debug on. Note that it will log incoming and outgoing REST messages which can contain sensetive information" -foregroundcolor "red"
     }
-	if ($Tenant -NotLike "*.centrify.com" -and $Tenant -NotLike "*.idaptive.") {
+	if ($Tenant -NotLike "*.centrify.com" -and $Tenant -NotMatch "^(.+).idaptive.(app|qa)$") {
 		$Tenant = $($Tenant)+".centrify.com"
 	}
     if (!$Region) {
