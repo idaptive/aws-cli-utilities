@@ -13,7 +13,7 @@
 # limitations under the License.
 
 param(
-[string]$Tenant="cloud.idaptive.com",
+[string]$Tenant="pod0.idaptive.app",
 [string]$Location
 )
 
