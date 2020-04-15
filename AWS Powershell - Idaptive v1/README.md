@@ -1,1 +1,1 @@
-Please see https://developer.centrify.com/v1.2/docs/aws-powershell-utility-v10
+Please see https://developer.idaptive.com/docs/aws-powershell-utility-v10
