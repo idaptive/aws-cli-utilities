@@ -14,28 +14,28 @@
 
 import logging
 
-class Application(object):
 
+class Application(object):
     def __init__(self, awsenv, env, appkey, role):
         self.awsenv = awsenv
         self.env = env
         self.appkey = appkey
         self.role = role
-        
+
     def get_aws_env(self):
         return self.awsenv
-    
+
     def get_env(self):
         return self.env
-    
+
     def get_appkey(self):
         return self.appkey
-    
+
     def get_role(self):
         return self.role
-    
+
     def log_application(self):
-        logging.info('--------- Application -----------')
+        logging.info("--------- Application -----------")
         logging.info(self.awsenv)
         logging.info(self.env)
         logging.info(self.appkey)

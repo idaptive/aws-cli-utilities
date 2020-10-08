@@ -12,6 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from config import proxy
-from config import environment
-from config import apps
+from config import apps, environment, proxy

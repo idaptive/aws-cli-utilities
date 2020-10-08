@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 def printline(n=80):
-    print('-' * n)
-    
+    print("-" * n)
+
+
 def printobj(obj):
     printline()
     print(obj)
     printline()
-    
-
-    

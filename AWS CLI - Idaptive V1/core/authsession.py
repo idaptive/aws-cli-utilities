@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 class AuthSession(object):
-    '''
+    """
     Authentication Result, which will store session id and session token (i.e. aspxauth cookie value)
-    '''
+    """
 
     def __init__(self, endpoint, username, session_id, session_token):
         self.endpoint = endpoint
         self.username = username
         self.session_id = session_id
         self.session_token = session_token
-        

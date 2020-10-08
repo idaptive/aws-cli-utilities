@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from core.htmlparser import SamlHtmlParser
 import logging
 
+from core.htmlparser import SamlHtmlParser
+
+
 class HtmlResponse(object):
-    '''
+    """
     Html Response from handle app click which consists of SAML
-    '''
+    """
+
     def __init__(self, html_response):
         self.html_response = html_response
-        self.saml = '';
-        
-    
+        self.saml = ""
+
     def get_saml(self):
         htmlparser = SamlHtmlParser()
         htmlparser.feed(self.html_response)
@@ -32,4 +34,3 @@ class HtmlResponse(object):
         logging.info("------------ SAML ---------------")
         logging.info(saml)
         return saml
-        
