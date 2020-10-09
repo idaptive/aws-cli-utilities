@@ -18,9 +18,8 @@ import configparser
 from . import proxy
 
 
-def read_proxy():
+def read_proxy(config_file):
     file_reader = configparser.ConfigParser()
-    config_file = "proxy.properties"
     file_reader.read(config_file)
     isproxy = file_reader["Proxy"]["proxy"]
     http_proxy = file_reader["Proxy"]["http_proxy"]
@@ -37,7 +36,7 @@ def log_config(proxy):
     proxy.log()
 
 
-def read_config():
-    proxy = read_proxy()
+def read_config(config_file):
+    proxy = read_proxy(config_file)
     log_config(proxy)
     return proxy

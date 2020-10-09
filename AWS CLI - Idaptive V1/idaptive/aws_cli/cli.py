@@ -51,6 +51,36 @@ def get_environment(args):
     return env
 
 
+def get_proxy_configuration(args):
+    proxy = {}
+
+    # We'll search for the proxy properties file in multiple locations and build
+    # the combinded configuration.
+    # TODO: use the standard HTTPS_PROXY environmental variables
+
+    for filename in (
+        os.path.expanduser("~/.config/idaptive-proxy.properties"),
+        os.path.expanduser("~/.idaptive-proxy.properties"),
+        "proxy.properties",
+    ):
+        if not os.path.exists(filename):
+            continue
+
+        proxy_obj = readconfig.read_config(filename)
+
+        if proxy_obj.is_proxy() == "yes":
+            proxy.update(
+                {
+                    "http": proxy_obj.get_http(),
+                    "https": proxy_obj.get_https(),
+                    "username": proxy_obj.get_user(),
+                    "password": proxy_obj.get_password(),
+                }
+            )
+
+    return proxy
+
+
 def login_instance(proxy, environment):
     if not environment.username:
         user = safe_input("Please enter your username : ")
@@ -170,21 +200,8 @@ def main():
 
     configure_logging(args.verbosity, args.log_file)
 
-    # FIXME: assume no if the file doesn't exist
-    try:
-        proxy_obj = readconfig.read_config()
-    except Exception:
-        raise RuntimeError(
-            "proxy.properties file not found. Please make sure the files are at home dir of the script."
-        )
-    proxy = {}
-    if proxy_obj.is_proxy() == "yes":
-        proxy = {
-            "http": proxy_obj.get_http(),
-            "https": proxy_obj.get_https(),
-            "username": proxy_obj.get_user(),
-            "password": proxy_obj.get_password(),
-        }
+    proxy = get_proxy_configuration(args)
+
     environment = get_environment(args)
     session, user = login_instance(proxy, environment)
 
