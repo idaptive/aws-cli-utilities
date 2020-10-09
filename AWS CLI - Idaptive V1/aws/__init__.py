@@ -13,4 +13,4 @@
 # limitations under the License.
 
 
-from aws import assumerolesaml
+from . import assumerolesaml, util  # NOQA

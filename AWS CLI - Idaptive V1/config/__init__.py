@@ -12,4 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from config import apps, environment, proxy
+
+from config import apps, environment, proxy  # noqa: F401

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import logging
 
 from core.htmlparser import SamlHtmlParser
@@ -31,6 +32,6 @@ class HtmlResponse(object):
         htmlparser.feed(self.html_response)
         saml = htmlparser.get_saml()
         htmlparser.clean()
-        logging.info("------------ SAML ---------------")
-        logging.info(saml)
+        logging.debug("------------ SAML ---------------")
+        logging.debug(saml)
         return saml

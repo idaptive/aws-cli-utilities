@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import json
 import logging
 
@@ -25,9 +26,9 @@ class AuthResponse(object):
         self.response = response
         self.tenant_url = tenant_url
         json_resp = json.loads(self.response.text)
-        logging.info("------ Json Response from the REST call ---------")
-        logging.info(json_resp)
-        logging.info("--------------------------------------------------")
+        logging.debug("------ Json Response from the REST call ---------")
+        logging.debug(json_resp)
+        logging.debug("--------------------------------------------------")
 
     def get_success_result(self):
         json_resp = json.loads(self.response.text)

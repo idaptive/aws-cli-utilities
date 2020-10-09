@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import json
 import logging
 
@@ -26,14 +27,9 @@ class AdvAuthRequest(object):
         self.session_id = session_id
         self.mechanism_id = mechanism_id
         self.password = password
-        logging.info("--------- Creating Adv Authentiation Request ----------")
-        logging.info(
-            "Tenant "
-            + tenant_id
-            + " Session "
-            + session_id
-            + " Mechanism "
-            + mechanism_id
+        logging.debug("--------- Creating Adv Authentiation Request ----------")
+        logging.debug(
+            "Tenant %s. Session %s. Mechanism %s.", tenant_id, session_id, mechanism_id
         )
 
     def get_adv_auth_json_passwd(self):
@@ -44,7 +40,7 @@ class AdvAuthRequest(object):
         message["Action"] = "Answer"
         message["Answer"] = self.password
         json_body = json.dumps(message)
-        logging.info(
+        logging.debug(
             "---------- Advance Authentication Passwd Request JSON body ------------"
         )
         return json_body
@@ -56,7 +52,7 @@ class AdvAuthRequest(object):
         message["MechanismId"] = self.mechanism_id
         message["Action"] = "StartOOB"
         json_body = json.dumps(message)
-        logging.info(
+        logging.debug(
             "---------- Advance Authentication StartOOB Request JSON body ------------"
         )
         return json_body
@@ -68,7 +64,7 @@ class AdvAuthRequest(object):
         message["MechanismId"] = self.mechanism_id
         message["Action"] = "Poll"
         json_body = json.dumps(message)
-        logging.info(
+        logging.debug(
             "---------- Advance Authentication StartOOB Request JSON body ------------"
         )
         return json_body

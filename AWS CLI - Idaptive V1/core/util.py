@@ -13,6 +13,9 @@
 # limitations under the License.
 
 
+import sys
+
+
 def printline(n=80):
     print("-" * n)
 
@@ -21,3 +24,9 @@ def printobj(obj):
     printline()
     print(obj)
     printline()
+
+
+if sys.version_info < (3, 0):
+    safe_input = raw_input  # NOQA
+else:
+    safe_input = input

@@ -1,4 +1,4 @@
-# Copyright 2018 core Corporation
+# Copyright 2019 IDaptive, LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from core import (
+from core import (  # noqa: F401
     adv_authrequest,
     auth,
     authrequest,

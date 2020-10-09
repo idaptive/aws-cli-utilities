@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
+
 import logging
 
 from core import restclient
@@ -35,5 +35,5 @@ def get_applications(user, session, environment, proxy):
         proxy,
         environment.get_debug(),
     )
-    logging.info(response.text)
+    logging.debug(response.text)
     return response.json()

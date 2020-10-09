@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import json
 import logging
 
@@ -21,7 +22,7 @@ class AuthRequest(object):
     Message body required for Authentication requests
     """
 
-    def __init__(self, tenantid, username, version, password=""):
+    def __init__(self, tenantid, username, version, password=None):
         self.tenantid = tenantid
         self.username = username
         self.version = version
@@ -33,6 +34,6 @@ class AuthRequest(object):
         message["User"] = self.username
         message["Version"] = self.version
         json_body = json.dumps(message)
-        logging.info("--------- Body of Start Authentication Request --------------")
-        logging.info(json_body)
+        logging.debug("--------- Body of Start Authentication Request --------------")
+        logging.debug(json_body)
         return json_body

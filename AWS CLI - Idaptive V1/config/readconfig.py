@@ -12,17 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
+
 import configparser
-import logging
-from getpass import getpass
 
-from config import apps, environment, proxy
-
-
-def set_logging():
-    logging.basicConfig(filename="config.log", level=logging.INFO)
-    logging.info("Starting App..")
+from config import proxy
 
 
 def read_proxy():

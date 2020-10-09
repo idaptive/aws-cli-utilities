@@ -12,16 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import logging
 
 
 class Environment(object):
-    def __init__(self, name, endpoint, certpath, debug):
+    def __init__(self, name, endpoint, certpath, debug, username):
         self.name = name
         self.endpoint = endpoint
         self.certpath = certpath
         self.debug = debug
         self.applications = []
+        self.username = username
 
     def log(self):
         logging.info("--------- Environment -----------")

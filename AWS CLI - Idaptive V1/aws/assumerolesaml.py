@@ -12,33 +12,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import configparser
+
+import base64
 import logging
-import sys
-from os.path import expanduser
+import re
 
 import boto3
 from botocore.exceptions import ClientError
+from defusedxml import ElementTree
+
+from .util import load_aws_credentials
 
 
-def write_cred(cred, count, display_name, region, role):
-    home = expanduser("~")
-    print("home = " + home)
-    cred_file = home + "/.aws/credentials"
-    config = configparser.RawConfigParser()
-    config.read(cred_file)
+def write_cred(
+    cred,
+    display_name,
+    region,
+    role,
+    use_app_name_for_profile=False,
+    credentials_filename=None,
+):
+    config, credentials_filename = load_aws_credentials(path=credentials_filename)
+
     print("Display Name : " + display_name)
     rolesplit = role.split("/")
     profile_name = rolesplit[1] + "_profile"
-    section = profile_name
+
+    if use_app_name_for_profile:
+        section = re.sub(r"^aws-", "", display_name, flags=re.IGNORECASE)
+        section = re.sub(r"[^-_\w]+", "", section)
+    else:
+        section = profile_name
+
     if not config.has_section(section):
         config.add_section(section)
     config.set(section, "output", "json")
     config.set(section, "region", region)
+    config.set(section, "idaptive_application_name", display_name)
+    config.set(section, "idaptive_role", role)
     config.set(section, "aws_access_key_id", cred["Credentials"]["AccessKeyId"])
     config.set(section, "aws_secret_access_key", cred["Credentials"]["SecretAccessKey"])
     config.set(section, "aws_session_token", cred["Credentials"]["SessionToken"])
-    with open(cred_file, "w+") as credentials:
+    with open(credentials_filename, "w+") as credentials:
         config.write(credentials)
     print("\n\n")
     print("-" * 80)
@@ -52,15 +67,39 @@ def write_cred(cred, count, display_name, region, role):
     print("-" * 80)
 
 
-def assume_role_with_saml(role, principle, saml, count, display_name, region):
+def assume_role_with_saml(
+    role, principle, saml, display_name, region, use_app_name_for_profile=False
+):
     stsclient = boto3.client("sts")
+
+    # If the SAML response has a specified duration we'll use that value instead
+    # of the default value of one hour
+    duration_seconds = 3600
+    saml_et = ElementTree.fromstring(base64.b64decode(saml))
+    for elem in saml_et.findall(
+        './/saml2a:Attribute[@Name="https://aws.amazon.com/SAML/Attributes/SessionDuration"]/saml2a:AttributeValue',  # noqa: E501
+        namespaces={
+            "saml2a": "urn:oasis:names:tc:SAML:2.0:assertion",
+        },
+    ):
+        duration_seconds = int(elem.text)
+
     try:
         cred = stsclient.assume_role_with_saml(
-            RoleArn=role, PrincipalArn=principle, SAMLAssertion=saml
+            RoleArn=role,
+            PrincipalArn=principle,
+            SAMLAssertion=saml,
+            DurationSeconds=duration_seconds,
         )
     except ClientError as e:
-        print("Access Denied. Please check.. " + str(e))
-        logging.info(str(e))
+        logging.error("Access denied: %s", e, exc_info=True)
         return False
-    write_cred(cred, count, display_name, region, role)
+
+    write_cred(
+        cred,
+        display_name,
+        region,
+        role,
+        use_app_name_for_profile=use_app_name_for_profile,
+    )
     return True
