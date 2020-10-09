@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="idaptive-aws-cli-utilities",
-    version="1.0.0",
+    version="1.0.1",
     description="Obtain AWS credentials using Idaptive SSO",
     packages=setuptools.find_packages(),
     classifiers=[
