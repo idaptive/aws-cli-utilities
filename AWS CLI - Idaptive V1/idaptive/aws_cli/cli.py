@@ -34,11 +34,11 @@ from getpass import getuser
 
 import coloredlogs
 
-from aws import assumerolesaml
-from aws.util import load_aws_credentials
-from config import environment, readconfig
-from core import auth, samlapp, uprest
-from core.util import safe_input
+from .aws import assumerolesaml
+from .aws.util import load_aws_credentials
+from .config import environment, readconfig
+from .core import auth, samlapp, uprest
+from .core.util import safe_input
 
 
 def get_environment(args):

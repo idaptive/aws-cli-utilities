@@ -15,7 +15,7 @@
 
 import configparser
 
-from config import proxy
+from . import proxy
 
 
 def read_proxy():

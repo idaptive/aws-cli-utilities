@@ -20,12 +20,12 @@ import time
 from getpass import getpass
 from urllib import parse as urlparse
 
-from core.adv_authrequest import AdvAuthRequest
-from core.authrequest import AuthRequest
-from core.authresponse import AuthResponse
-from core.authsession import AuthSession
-from core.restclient import call_rest_post
-from core.util import safe_input
+from .adv_authrequest import AdvAuthRequest
+from .authrequest import AuthRequest
+from .authresponse import AuthResponse
+from .authsession import AuthSession
+from .restclient import call_rest_post
+from .util import safe_input
 
 result = []
 done = False

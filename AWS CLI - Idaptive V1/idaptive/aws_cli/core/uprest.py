@@ -15,7 +15,7 @@
 
 import logging
 
-from core import restclient
+from . import restclient
 
 
 def get_applications(user, session, environment, proxy):

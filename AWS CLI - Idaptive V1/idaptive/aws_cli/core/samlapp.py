@@ -22,10 +22,10 @@ from urllib import parse as urlparse
 import defusedxml.ElementTree as ET
 from colorama import Fore, Style
 
-from core import auth, restclient
-from core.awsinputs import AwsInputs
-from core.htmlresponse import HtmlResponse
-from core.util import printline, safe_input
+from . import auth, restclient
+from .awsinputs import AwsInputs
+from .htmlresponse import HtmlResponse
+from .util import printline, safe_input
 
 
 def handle_app_click(session, appkey, version, environment, proxy):

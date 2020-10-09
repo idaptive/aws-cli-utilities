@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from core import (  # noqa: F401
+from . import (  # noqa: F401
     adv_authrequest,
     auth,
     authrequest,

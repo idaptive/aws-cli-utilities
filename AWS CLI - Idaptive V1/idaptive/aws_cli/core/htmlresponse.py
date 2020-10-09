@@ -13,4 +13,25 @@
 # limitations under the License.
 
 
-from config import apps, environment, proxy  # noqa: F401
+import logging
+
+from .htmlparser import SamlHtmlParser
+
+
+class HtmlResponse(object):
+    """
+    Html Response from handle app click which consists of SAML
+    """
+
+    def __init__(self, html_response):
+        self.html_response = html_response
+        self.saml = ""
+
+    def get_saml(self):
+        htmlparser = SamlHtmlParser()
+        htmlparser.feed(self.html_response)
+        saml = htmlparser.get_saml()
+        htmlparser.clean()
+        logging.debug("------------ SAML ---------------")
+        logging.debug(saml)
+        return saml
