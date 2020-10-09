@@ -17,6 +17,6 @@ param(
 [string]$Location
 )
 
-Import-Module .\Init.psm1 3>$null 4>$null -force 
+Import-Module .\Init.psm1 3>$null 4>$null -force
 
 Init-Authenticate -Tenant $Tenant $Location
