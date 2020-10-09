@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import base64
 import logging
 import re
+from functools import partial
 
 import boto3
 from botocore.exceptions import ClientError
@@ -74,7 +74,7 @@ def assume_role_with_saml(
 
     # If the SAML response has a specified duration we'll use that value instead
     # of the default value of one hour
-    duration_seconds = 3600
+    default_duration_seconds = duration_seconds = 3600
     saml_et = ElementTree.fromstring(base64.b64decode(saml))
     for elem in saml_et.findall(
         './/saml2a:Attribute[@Name="https://aws.amazon.com/SAML/Attributes/SessionDuration"]/saml2a:AttributeValue',  # noqa: E501
@@ -84,22 +84,44 @@ def assume_role_with_saml(
     ):
         duration_seconds = int(elem.text)
 
-    try:
-        cred = stsclient.assume_role_with_saml(
-            RoleArn=role,
-            PrincipalArn=principle,
-            SAMLAssertion=saml,
-            DurationSeconds=duration_seconds,
-        )
-    except ClientError as e:
-        logging.error("Access denied: %s", e, exc_info=True)
-        return False
-
-    write_cred(
-        cred,
-        display_name,
-        region,
-        role,
-        use_app_name_for_profile=use_app_name_for_profile,
+    # We're possibly going to make two almost identical calls differing only in
+    # the session duration so we'll use partial to avoid repeating the common
+    # parts of the function call:
+    assume_role_f = partial(
+        stsclient.assume_role_with_saml,
+        RoleArn=role,
+        PrincipalArn=principle,
+        SAMLAssertion=saml,
     )
-    return True
+
+    cred = None
+    try:
+        try:
+            cred = assume_role_f(DurationSeconds=duration_seconds)
+        except ClientError as e:
+            err = e.response.get("Error", {})
+            if err.get("Code") != "ValidationError":
+                raise
+
+            logging.warning(
+                "Failed to assume role with duration %d (will retry %d): %s",
+                duration_seconds,
+                default_duration_seconds,
+                err.get("Message"),
+            )
+            cred = assume_role_f(DurationSeconds=default_duration_seconds)
+
+    except ClientError as e:
+        logging.error("Unable to assume role: %s", e, exc_info=True)
+
+    if not cred:
+        return False
+    else:
+        write_cred(
+            cred,
+            display_name,
+            region,
+            role,
+            use_app_name_for_profile=use_app_name_for_profile,
+        )
+        return True
