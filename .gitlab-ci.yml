@@ -1,4 +1,10 @@
+stages:
+    - validate
+    - build
+    - upload
+
 precommit:
+    stage: validate
     tags:
         - docker
     image: docker:latest
@@ -9,8 +15,19 @@ precommit:
     script:
         - docker run --rm --volume "$PWD":/code acdha/pre-commit
 
-package:
+build:
+    stage: build
     image: python:latest
+    script:
+        - cd "AWS CLI - Idaptive V1"
+        - python setup.py sdist bdist_wheel
+
+upload:
+    stage: upload
+    image: python:latest
+    only:
+        refs:
+            - master
     script:
         - cd "AWS CLI - Idaptive V1"
         - pip install twine
