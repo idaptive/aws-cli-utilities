@@ -1,7 +1,11 @@
 stages:
     - validate
     - build
+    - test
     - upload
+
+include:
+    - template: Dependency-Scanning.gitlab-ci.yml
 
 precommit:
     stage: validate
