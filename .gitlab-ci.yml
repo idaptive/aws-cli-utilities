@@ -11,7 +11,7 @@ precommit:
     stage: validate
     tags:
         - docker
-    image: git.loc.gov/devops/dependency_proxy/containers/docker:latest
+    image: git.loc.gov:4567/devops/docker-hub-mirror/docker:latest
     services:
         - docker:dind
     before_script:
