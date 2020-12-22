@@ -9,26 +9,25 @@ include:
 
 precommit:
     stage: validate
-    tags:
-        - docker
     image: git.loc.gov:4567/devops/docker-hub-mirror/docker:latest
     services:
-        - docker:dind
+        - name: git.loc.gov:4567/devops/docker-hub-mirror/docker:dind
+          alias: docker
     before_script:
-        - docker pull acdha/pre-commit
+        - docker pull git.loc.gov:4567/devops/pre-commit-docker/master
     script:
-        - docker run --rm --volume "$PWD":/code acdha/pre-commit
+        - docker run --rm --volume "$PWD":/code git.loc.gov:4567/devops/pre-commit-docker/master
 
 build:
     stage: build
-    image: python:latest
+    image: git.loc.gov:4567/devops/docker-hub-mirror/python:latest
     script:
         - cd "AWS CLI - Idaptive V1"
         - python setup.py sdist bdist_wheel
 
 upload:
     stage: upload
-    image: python:latest
+    image: git.loc.gov:4567/devops/docker-hub-mirror/python:latest
     only:
         refs:
             - master
