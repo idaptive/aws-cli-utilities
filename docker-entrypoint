@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -e -u
+
+if [ ! -d ~/.aws ] || [ ! -f ~/.aws/credentials ]; then
+    install -d -m 0700 ~/.aws
+    idaptive-aws-cli-login
+fi
+
+# echo "Using AWS credentials for ${IDAPTIVE_USERNAME:=$(whoami)} from ${IDAPTIVE_TENANT:-cloud.idaptive.com}"
+
+mapfile -t AWS_PROFILES < <(aws configure list-profiles)
+
+if [ -z "${AWS_PROFILE:-}" ]; then
+    export AWS_PROFILE="${AWS_PROFILES[0]}"
+
+    AWS_PROFILE_COUNT=${#AWS_PROFILES[@]}
+
+    if [ "${AWS_PROFILE_COUNT}" -gt 1 ]; then
+        echo "You have ${AWS_PROFILE_COUNT} AWS profiles: currently using AWS_PROFILE if you want to use a profile other than ${AWS_PROFILE}"
+        for profile in "${AWS_PROFILES[@]}"; do
+            echo -e "\t${profile}"
+        done
+    fi
+fi
+
+if [ $# -lt 1 ]; then
+    echo "Launching AWS CLI using profile ${AWS_PROFILE} as $(aws sts get-caller-identity --query "Arn" --output=text)"
+    exec bash -l
+else
+    exec aws "$@"
+fi
