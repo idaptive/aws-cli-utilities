@@ -182,7 +182,7 @@ def handle_text(
     mechanism_id = mechanism["MechanismId"]
     session_id = tenant_response.get_sessionid()
     tenant_id = tenant_response.get_tenantid()
-    passwd = getpass(mechanism["PromptSelectMech"] + " : ")
+    passwd = getpass(f'{mechanism["PromptSelectMech"]} for {username} at {endpoint}: ')
     request = AdvAuthRequest(tenant_id, session_id, mechanism_id, passwd)
     json_req = request.get_adv_auth_json_passwd()
     headers = {}
