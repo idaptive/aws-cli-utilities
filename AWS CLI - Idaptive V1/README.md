@@ -17,13 +17,13 @@ own virtualenv and can be updated automatically when new versions of Python or
 this program are released.
 
 ```bash
-pipx install 'https://github.com/acdha/aws-cli-utilities/releases/download/v1.0.1/idaptive-aws-cli-utilities-1.0.1.tar.gz'
+pipx install 'https://github.com/acdha/aws-cli-utilities/releases/download/v1.2.0/idaptive-aws-cli-utilities-1.2.0.tar.gz'
 ```
 
 Alternatively you can use pip in the Python environment of your choosing:
 
 ```bash
-python3 -m pip install 'https://github.com/acdha/aws-cli-utilities/releases/download/v1.0.1/idaptive-aws-cli-utilities-1.0.1.tar.gz'
+python3 -m pip install 'https://github.com/acdha/aws-cli-utilities/releases/download/v1.2.0/idaptive-aws-cli-utilities-1.2.0.tar.gz'
 ```
 
 ## Running the CLI
