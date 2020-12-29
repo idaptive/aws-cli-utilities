@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-param(
-[string]$Tenant="pod0.idaptive.app",
-[string]$Location
-)
 
-Import-Module .\Init.psm1 3>$null 4>$null -force
+class user(object):
+    def __init__(self, username, session):
+        self.username = username
+        self.session = session
 
-Init-Authenticate -Tenant $Tenant $Location
+        def get_username(self):
+            return self.username
+
+        def get_session(self):
+            return self.session

@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-param(
-[string]$Tenant="pod0.idaptive.app",
-[string]$Location
-)
 
-Import-Module .\Init.psm1 3>$null 4>$null -force
+class AuthSession(object):
+    """
+    Authentication Result, which will store session id and session token (i.e.
+    aspxauth cookie value)
+    """
 
-Init-Authenticate -Tenant $Tenant $Location
+    def __init__(self, endpoint, username, session_id, session_token):
+        self.endpoint = endpoint
+        self.username = username
+        self.session_id = session_id
+        self.session_token = session_token

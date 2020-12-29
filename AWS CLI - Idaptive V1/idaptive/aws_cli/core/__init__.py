@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-param(
-[string]$Tenant="pod0.idaptive.app",
-[string]$Location
+
+from . import (  # noqa: F401
+    adv_authrequest,
+    auth,
+    authrequest,
+    authresponse,
+    authsession,
+    htmlparser,
+    htmlresponse,
+    restclient,
 )
-
-Import-Module .\Init.psm1 3>$null 4>$null -force
-
-Init-Authenticate -Tenant $Tenant $Location

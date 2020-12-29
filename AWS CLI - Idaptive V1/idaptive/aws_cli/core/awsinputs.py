@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-param(
-[string]$Tenant="pod0.idaptive.app",
-[string]$Location
-)
 
-Import-Module .\Init.psm1 3>$null 4>$null -force
+class AwsInputs(object):
+    """
+    Object contains saml, selected role and the provider
+    """
 
-Init-Authenticate -Tenant $Tenant $Location
+    def __init__(self, role, provider, saml):
+        self.role = role
+        self.provider = provider
+        self.saml = saml

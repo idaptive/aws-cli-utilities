@@ -12,11 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-param(
-[string]$Tenant="pod0.idaptive.app",
-[string]$Location
-)
 
-Import-Module .\Init.psm1 3>$null 4>$null -force
+import sys
 
-Init-Authenticate -Tenant $Tenant $Location
+
+def printline(n=80):
+    print("-" * n)
+
+
+def printobj(obj):
+    printline()
+    print(obj)
+    printline()
+
+
+if sys.version_info < (3, 0):
+    safe_input = raw_input  # NOQA
+else:
+    safe_input = input

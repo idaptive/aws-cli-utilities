@@ -1,0 +1,38 @@
+stages:
+    - validate
+    - build
+    - test
+    - upload
+
+include:
+    - template: Dependency-Scanning.gitlab-ci.yml
+
+precommit:
+    stage: validate
+    image: git.loc.gov:4567/devops/docker-hub-mirror/docker:latest
+    services:
+        - name: git.loc.gov:4567/devops/docker-hub-mirror/docker:dind
+          alias: docker
+    before_script:
+        - docker pull git.loc.gov:4567/devops/pre-commit-docker/master
+    script:
+        - docker run --rm --volume "$PWD":/code git.loc.gov:4567/devops/pre-commit-docker/master
+
+build:
+    stage: build
+    image: git.loc.gov:4567/devops/docker-hub-mirror/python:latest
+    script:
+        - cd "AWS CLI - Idaptive V1"
+        - python setup.py sdist bdist_wheel
+
+upload:
+    stage: upload
+    image: git.loc.gov:4567/devops/docker-hub-mirror/python:latest
+    only:
+        refs:
+            - master
+    script:
+        - cd "AWS CLI - Idaptive V1"
+        - pip install twine
+        - python setup.py sdist bdist_wheel
+        - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
