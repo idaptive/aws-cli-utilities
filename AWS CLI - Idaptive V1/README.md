@@ -9,6 +9,12 @@ but are covered in the output of the `--help` command-line argument.
 Many options can be set using environmental variables to avoid needing to
 specify them on the command-line for every call.
 
+## Docker Usage
+
+As an alternative to installing a local copy, a Docker image is available.
+Please see the [Docker Usage instructions](../README.md#docker-usage) in the
+top-level README.
+
 ## Installation
 
 [pipx](https://pipxproject.github.io/pipx/) is highly recommended for Python

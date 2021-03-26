@@ -7,6 +7,15 @@ will obtain short-term AWS credentials after you authenticate to Idaptive and a
 PowerShell version which will only run on Microsoft Windows. Please consult the
 README files in the directory for the tool which suits your needs.
 
+## Python Installation
+
+See [the Python CLI documentation](./AWS%20CLI%20-%20Idaptive%20V1/README.md) for more details:
+
+```bash
+$ pipx install idaptive-aws-cli-utilities --pip-args='--extra-index-url https://git.loc.gov/api/v4/projects/1594/packages/pypi/simple'
+…
+```
+
 ## Docker Usage
 
 As a convenience a Docker image is available which has the Idaptive Python CLI
