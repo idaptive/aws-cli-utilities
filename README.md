@@ -29,7 +29,14 @@ variables:
 In the simplest case, this can be used to start a shell:
 
 ```bash
-cadams@Ganymede ~/Projects/idaptive-aws-cli-utilities (add-docker-wrapper)> docker run -it --rm -e IDAPTIVE_USERNAME idaptive-aws-cli
+$ docker pull git.loc.gov:4567/devops/idaptive-aws-cli-utilities/master
+Using default tag: latest
+latest: Pulling from devops/idaptive-aws-cli-utilities/master
+Digest: sha256:0c99e4546236c85db21b8202ac6aa3373522c5bfb322b41c2bfb86fe3ca15787
+Status: Image is up to date for git.loc.gov:4567/devops/idaptive-aws-cli-utilities/master:latest
+git.loc.gov:4567/devops/idaptive-aws-cli-utilities/master:latest
+$ docker tag git.loc.gov:4567/devops/idaptive-aws-cli-utilities/master idaptive-aws-cli
+$ docker run -it --rm -e IDAPTIVE_USERNAME idaptive-aws-cli
 Password :
 Select the aws app to login. Type 'quit' or 'q' to exit
 …
