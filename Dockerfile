@@ -4,6 +4,8 @@ RUN apt-get update -qqy && apt-get upgrade -qqy && apt-get install -y less groff
 
 RUN mkdir /tmp/awscli-install && cd /tmp/awscli-install && curl -LO --fail --silent "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" && unzip -q awscli-exe-linux-x86_64.zip && ./aws/install && rm -rf /tmp/awscli-install
 
+RUN curl --fail --silent -Lo "/tmp/session-manager-plugin.deb" "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_$(test "$(dpkg --print-architecture)" = "arm64"  && echo "arm64" || echo "64bit" )/session-manager-plugin.deb" && dpkg -i /tmp/session-manager-plugin.deb && rm /tmp/session-manager-plugin.deb
+
 ADD ["AWS CLI - Idaptive V1", "/tmp/python-cli"]
 RUN cd /tmp/python-cli && python setup.py install && rm -rf /tmp/python-cli
 
