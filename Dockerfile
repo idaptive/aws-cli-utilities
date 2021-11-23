@@ -1,6 +1,6 @@
 FROM git.loc.gov:4567/devops/docker-hub-mirror/python:latest
 
-RUN apt-get update -qqy && apt-get upgrade -qqy && apt-get install -y less groff-base && apt-get autoremove -qqy && apt-get autoclean -qqy
+RUN apt-get update -qqy && apt-get upgrade -qqy && apt-get install -y less groff-base vim && apt-get autoremove -qqy && apt-get autoclean -qqy
 
 RUN mkdir /tmp/awscli-install && cd /tmp/awscli-install && curl -LO --fail --silent "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" && unzip -q awscli-exe-linux-x86_64.zip && ./aws/install && rm -rf /tmp/awscli-install
 
