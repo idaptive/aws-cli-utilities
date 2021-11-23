@@ -8,17 +8,11 @@ include:
     - template: Jobs/Build.gitlab-ci.yml
     - template: Dependency-Scanning.gitlab-ci.yml
     - template: Security/SAST.gitlab-ci.yml
+    - project: "DevOps/pre-commit-docker"
+      file: templates/pre-commit.yml
 
 precommit:
-    stage: validate
-    image: git.loc.gov:4567/devops/docker-hub-mirror/docker:latest
-    services:
-        - name: git.loc.gov:4567/devops/docker-hub-mirror/docker:dind
-          alias: docker
-    before_script:
-        - docker pull git.loc.gov:4567/devops/pre-commit-docker/master
-    script:
-        - docker run --rm --volume "$PWD":/code git.loc.gov:4567/devops/pre-commit-docker/master
+    stage: test
 
 build_python_artifacts:
     stage: build
