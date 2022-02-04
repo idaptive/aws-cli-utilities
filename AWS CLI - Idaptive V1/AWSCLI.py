@@ -1,4 +1,4 @@
-# Copyright 2019 IDaptive, LLC.
+# Copyright 2019 CyberArk, LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,9 @@ def get_environment(args):
         tenant = tenant + ".centrify.com"
     name = tenant.split(".")[0]
     tenant = "https://" + tenant
-    cert = "cacerts_" + name + ".pem"
+    cert = True
+    # Users can uncommment the following line and comment the line "cert=True" if they want cert pinning.
+    # cert = "cacerts_" + name + ".pem"
     debug = args.debug
     env = environment.Environment(name, tenant, cert, debug)
     return env
