@@ -1,1 +1,1 @@
-Please see https://developer.idaptive.com/docs/aws-powershell-utility-v10
+Please see https://identity-developer.cyberark.com/docs/aws-powershell-utility-v10

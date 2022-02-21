@@ -1,1 +1,1 @@
-Please see https://developer.idaptive.com/v1.2/docs/aws-cli
+Please see https://identity-developer.cyberark.com/docs/aws-cli

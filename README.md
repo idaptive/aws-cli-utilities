@@ -1,2 +1,2 @@
 # aws-cli-utilities
-AWS CLI tools for Idaptive
+AWS CLI tools for CyberArk
