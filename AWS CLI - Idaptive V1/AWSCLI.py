@@ -1,4 +1,4 @@
-# Copyright 2019 IDaptive, LLC.
+# Copyright 2019 CyberArk, LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,11 +27,12 @@ import traceback
 
 def get_environment(args):
     tenant = args.tenant
-    if ("idaptive." not in tenant and "centrify.com" not in tenant):
-        tenant = tenant + ".centrify.com"
+    if ("idaptive." not in tenant):
+        tenant = tenant + ".idaptive.app"
     name = tenant.split(".")[0]
     tenant = "https://" + tenant
-    cert = "cacerts_" + name + ".pem"
+    #cert = "cacerts_" + name + ".pem"  
+    cert = True    # comment this line and uncomment above line to add certificate pinning. Please refer url https://identity-developer.cyberark.com/docs/making-cacertspem
     debug = args.debug
     env = environment.Environment(name, tenant, cert, debug)
     return env
