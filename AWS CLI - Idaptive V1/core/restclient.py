@@ -26,6 +26,8 @@ def call_rest_post(endpoint, method, body, headers, certpath, proxy, debug):
     if 'cache-control' not in headers:
         headers['cache-control'] = "no-cache"
 
+    headers['User-Agent'] = "CyberArkIdentity-AWS-Cli"
+
     logging.info("Calling " + endpoint + " with headers : " + str(headers))
     if (debug):
         logging.info("Request : " + str(body))
