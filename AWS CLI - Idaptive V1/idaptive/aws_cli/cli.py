@@ -34,6 +34,7 @@ from getpass import getuser
 
 import coloredlogs
 
+from .. import __version__ as cli_version
 from .aws import assumerolesaml
 from .aws.util import load_aws_credentials
 from .config import environment, readconfig
@@ -87,8 +88,7 @@ def login_instance(proxy, environment):
     else:
         user = environment.username
 
-    version = "1.0"
-    session = auth.idaptive_interactive_login(user, version, proxy, environment)
+    session = auth.idaptive_interactive_login(user, cli_version, proxy, environment)
     return session, user
 
 
@@ -196,6 +196,10 @@ def main():
         help="Display more progress information (use multiple times for more detail)",
     )
 
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {cli_version}"
+    )
+
     args = parser.parse_args()
 
     configure_logging(args.verbosity, args.log_file)
@@ -240,7 +244,7 @@ def main():
             if not app_name or not role:
                 continue
 
-            logging.info("Renewing %s session as %s" % (app_name, role))
+            logging.info("Renewing %s session as %s", app_name, role)
 
             try:
                 app_saml = samlapp.call_app(

@@ -55,25 +55,15 @@ def call_rest_post_redirect(
     if "cache-control" not in headers:
         headers["cache-control"] = "no-cache"
     endpoint = endpoint + method
-    logging.info("Calling " + endpoint)
+    logging.info("Calling endpoint: %s", endpoint)
     logging.debug(
-        "Method : "
-        + method
-        + " Request Body : "
-        + str(body)
-        + " Headers : "
-        + str(headers)
-        + " Proxy : "
-        + str(proxy)
+        "Method: %s Request Body: %s Headers: %s Proxy: %s",
+        method,
+        body,
+        headers,
+        proxy,
     )
-    logging.debug(
-        "Calling "
-        + endpoint
-        + " with headers : "
-        + str(headers)
-        + " and data : "
-        + str(body)
-    )
+    logging.debug("Calling: %s with headers: %s and data: %s", endpoint, headers, body)
     response = requests.post(
         endpoint, headers=headers, verify=certpath, proxies=proxy, data=body
     )

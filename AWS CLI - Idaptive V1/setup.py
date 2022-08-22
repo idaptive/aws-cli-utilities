@@ -17,6 +17,7 @@ setuptools.setup(
         "colorama",
         "coloredlogs",
         "defusedxml",
+        "importlib-metadata >= 1.0 ; python_version < '3.8'",
     ],
     entry_points={
         "console_scripts": ["idaptive-aws-cli-login=idaptive.aws_cli.cli:main"],

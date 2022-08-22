@@ -217,7 +217,7 @@ def handle_text_oob(
     authresp = call_rest_post(
         endpoint, method, json_req, headers, certpath, proxy, environment.get_debug()
     )
-    logging.debug("The response is StartOob req" + authresp.text)
+    logging.debug("The response is StartOob req %s", authresp.text)
     handle_unix(
         mechanism,
         tenant_response,
@@ -303,8 +303,9 @@ def advance_auth_for_mech(
                 break
             time.sleep(2)
         print()
-        logging.info("Is it Successful : " + str(success_result))
+        logging.info("Is it Successful: %s", success_result)
         logging.debug(summary)
+
     if success_result is True and summary == "LoginSuccess":
         session_token = authresp.cookies[".ASPXAUTH"]
         logging.debug(session_token)

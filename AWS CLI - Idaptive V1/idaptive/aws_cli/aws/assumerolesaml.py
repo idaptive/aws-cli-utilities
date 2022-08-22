@@ -111,8 +111,8 @@ def assume_role_with_saml(
             )
             cred = assume_role_f(DurationSeconds=default_duration_seconds)
 
-    except ClientError as e:
-        logging.error("Unable to assume role: %s", e, exc_info=True)
+    except ClientError:
+        logging.exception("Unable to assume role: %s", role)
 
     if not cred:
         return False
