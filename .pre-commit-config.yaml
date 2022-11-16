@@ -5,11 +5,11 @@ repos:
       hooks:
           - id: isort
     - repo: https://github.com/psf/black
-      rev: 22.6.0
+      rev: 23.3.0
       hooks:
           - id: black
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.3.0
+      rev: v4.4.0
       hooks:
           - id: check-added-large-files
             args: ["--maxkb=128"]
@@ -38,8 +38,8 @@ repos:
       hooks:
           - id: prettier
             files: \.(css|less|scss|ts|tsx|graphql|gql|js|jsx|md|yml|yaml)$
-    - repo: https://gitlab.com/pycqa/flake8
-      rev: 3.9.2
+    - repo: https://github.com/pycqa/flake8
+      rev: 6.0.0
       hooks:
           - id: flake8
             additional_dependencies:
@@ -50,6 +50,6 @@ repos:
                 - flake8-eradicate
                 - flake8-bugbear
     - repo: https://github.com/PyCQA/bandit
-      rev: 1.7.4
+      rev: 1.7.5
       hooks:
           - id: bandit
