@@ -12,3 +12,7 @@ proxy.properties
 
 # MISC
 changes.txt
+
+build
+dist
+*.egg-info

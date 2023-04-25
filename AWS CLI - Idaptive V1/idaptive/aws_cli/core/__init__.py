@@ -1,4 +1,4 @@
-﻿# Copyright 2019 CyberArk, LLC.
+# Copyright 2019 IDaptive, LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-param(
-[string]$Tenant="pod0.idaptive.app",
-[string]$Location
+
+from . import (  # noqa: F401
+    adv_authrequest,
+    auth,
+    authrequest,
+    authresponse,
+    authsession,
+    htmlparser,
+    htmlresponse,
+    restclient,
 )
-
-Import-Module .\Init.psm1 3>$null 4>$null -force
-
-Init-Authenticate -Tenant $Tenant $Location

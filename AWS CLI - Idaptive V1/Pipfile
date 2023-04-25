@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "*"
+isort = "*"
+
+[packages]
+requests = "*"
+boto3 = "*"
+colorama = "*"
+coloredlogs = "*"
+defusedxml = "*"
+
+[requires]
+python_version = "3.8"

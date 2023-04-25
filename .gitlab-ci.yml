@@ -1,0 +1,37 @@
+stages:
+    - validate
+    - build
+    - test
+    - upload
+
+include:
+    - template: Jobs/Build.gitlab-ci.yml
+    - template: Dependency-Scanning.gitlab-ci.yml
+    - template: Security/SAST.gitlab-ci.yml
+    - project: "DevOps/pre-commit-docker"
+      file: templates/pre-commit.yml
+
+precommit:
+    stage: test
+
+build_python_artifacts:
+    stage: build
+    image: git.loc.gov:4567/devops/docker-hub-mirror/python:latest
+    script:
+        - cd "AWS CLI - Idaptive V1"
+        - python setup.py sdist bdist_wheel
+    artifacts:
+        paths:
+            - "AWS CLI - Idaptive V1/dist/*"
+
+upload:
+    stage: upload
+    image: git.loc.gov:4567/devops/docker-hub-mirror/python:latest
+    rules:
+        - if: "$CI_COMMIT_TAG =~ /^v[0-9]+/"
+    dependencies:
+        - build_python_artifacts
+    script:
+        - cd "AWS CLI - Idaptive V1"
+        - pip install twine
+        - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*

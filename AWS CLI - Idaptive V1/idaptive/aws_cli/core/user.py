@@ -1,4 +1,4 @@
-﻿# Copyright 2019 CyberArk, LLC.
+# Copyright 2019 CyberArk, LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-param(
-[string]$Tenant="pod0.idaptive.app",
-[string]$Location
-)
 
-Import-Module .\Init.psm1 3>$null 4>$null -force
+class user:
+    def __init__(self, username, session):
+        self.username = username
+        self.session = session
 
-Init-Authenticate -Tenant $Tenant $Location
+        def get_username(self):
+            return self.username
+
+        def get_session(self):
+            return self.session
