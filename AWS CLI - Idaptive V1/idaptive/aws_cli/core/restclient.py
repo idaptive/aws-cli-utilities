@@ -17,6 +17,8 @@ import logging
 
 import requests
 
+DEFAULT_REQUESTS_TIMEOUT = 60
+
 
 def call_rest_post(endpoint, method, body, headers, certpath, proxy, debug):
     endpoint = endpoint + method
@@ -34,7 +36,12 @@ def call_rest_post(endpoint, method, body, headers, certpath, proxy, debug):
 
     try:
         response = requests.post(
-            endpoint, headers=headers, verify=certpath, proxies=proxy, data=body
+            endpoint,
+            headers=headers,
+            verify=certpath,
+            proxies=proxy,
+            data=body,
+            timeout=DEFAULT_REQUESTS_TIMEOUT,
         )
     except Exception:
         logging.exception("Error in calling %s ", endpoint)
@@ -65,7 +72,12 @@ def call_rest_post_redirect(
     )
     logging.debug("Calling: %s with headers: %s and data: %s", endpoint, headers, body)
     response = requests.post(
-        endpoint, headers=headers, verify=certpath, proxies=proxy, data=body
+        endpoint,
+        headers=headers,
+        verify=certpath,
+        proxies=proxy,
+        data=body,
+        timeout=DEFAULT_REQUESTS_TIMEOUT,
     )
     logging.debug("Received Response %s", response)
     return response
