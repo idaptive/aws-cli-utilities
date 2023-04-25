@@ -10,14 +10,13 @@ setuptools.setup(
         "License :: OSI Approved :: Apache License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     install_requires=[
         "requests",
         "boto3",
         "colorama",
         "coloredlogs",
         "defusedxml",
-        "importlib-metadata >= 1.0 ; python_version < '3.8'",
     ],
     entry_points={
         "console_scripts": ["idaptive-aws-cli-login=idaptive.aws_cli.cli:main"],

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-class AwsInputs(object):
+class AwsInputs:
     """
     Object contains saml, selected role and the provider
     """

@@ -16,7 +16,7 @@
 import logging
 
 
-class Proxy(object):
+class Proxy:
     def __init__(self, isproxy, proxy_http, proxy_https, proxy_user, proxy_password):
         self.isproxy = isproxy
         self.proxy_http = proxy_http

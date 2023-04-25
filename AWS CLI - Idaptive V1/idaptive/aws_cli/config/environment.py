@@ -16,7 +16,7 @@
 import logging
 
 
-class Environment(object):
+class Environment:
     def __init__(self, name, endpoint, certpath, debug, username):
         self.name = name
         self.endpoint = endpoint

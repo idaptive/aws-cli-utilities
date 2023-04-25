@@ -17,7 +17,7 @@ import json
 import logging
 
 
-class AuthRequest(object):
+class AuthRequest:
     """
     Message body required for Authentication requests
     """

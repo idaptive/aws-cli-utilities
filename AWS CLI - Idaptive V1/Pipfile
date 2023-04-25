@@ -4,17 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "==20.8b1"
+black = "*"
 isort = "*"
-"flake8" = "*"
-coverage = "*"
-flake8-eradicate = "*"
-flake8-comprehensions = "*"
-flake8-logging-format = "*"
-flake8-builtins = "*"
-flake8-assertive = "*"
-flake8-bugbear = "*"
-bandit = "*"
 
 [packages]
 requests = "*"

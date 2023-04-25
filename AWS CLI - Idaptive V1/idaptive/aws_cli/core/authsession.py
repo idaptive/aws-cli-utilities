@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-class AuthSession(object):
+class AuthSession:
     """
     Authentication Result, which will store session id and session token (i.e.
     aspxauth cookie value)

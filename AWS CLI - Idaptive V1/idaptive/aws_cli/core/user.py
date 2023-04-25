@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-class user(object):
+class user:
     def __init__(self, username, session):
         self.username = username
         self.session = session

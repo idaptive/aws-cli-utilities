@@ -44,7 +44,7 @@ from .core.util import safe_input
 
 def get_environment(args):
     tenant = args.tenant
-    if ("." not in tenant):
+    if "." not in tenant:
         tenant = tenant + ".idaptive.app"
     name = tenant.split(".")[0]
     tenant = "https://" + tenant

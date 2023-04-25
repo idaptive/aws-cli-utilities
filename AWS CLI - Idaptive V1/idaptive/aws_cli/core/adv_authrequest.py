@@ -17,7 +17,7 @@ import json
 import logging
 
 
-class AdvAuthRequest(object):
+class AdvAuthRequest:
     """
     Request object for advanced authentication
     """

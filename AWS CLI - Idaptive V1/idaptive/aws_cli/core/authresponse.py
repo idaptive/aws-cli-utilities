@@ -17,7 +17,7 @@ import json
 import logging
 
 
-class AuthResponse(object):
+class AuthResponse:
     """
     Authentication Response received
     """

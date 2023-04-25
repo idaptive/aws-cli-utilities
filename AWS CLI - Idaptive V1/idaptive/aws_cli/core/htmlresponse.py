@@ -18,7 +18,7 @@ import logging
 from .htmlparser import SamlHtmlParser
 
 
-class HtmlResponse(object):
+class HtmlResponse:
     """
     Html Response from handle app click which consists of SAML
     """
