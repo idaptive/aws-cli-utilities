@@ -17,6 +17,7 @@ from botocore.exceptions import ClientError
 from os.path import expanduser
 import configparser
 import sys
+import math
 import logging
 
 def write_cred(cred, count, display_name, region, role):
@@ -46,16 +47,42 @@ def write_cred(cred, count, display_name, region, role):
     print('aws s3 ls --profile ' + section)
     print('-' * 80)
 
+
+
+def input_session_duration_time():
+    """
+    Prompts the user for a number of hours, validates the input, and
+    calculates the total number of seconds.
+    """
+    while True:
+        # Prompt user for input
+        input_value = input("\nPlease enter Session Duration Hours (up to 10): ")
+
+        # Validate if the input is a valid integer
+        try:
+            duration_hours = int(input_value)
+            if duration_hours < 0 or duration_hours > 10:
+                raise ValueError("Input must be a positive integer between 1 and 10.")
+            break  # Exit the loop if input is valid
+        except ValueError:
+            print("Error: Invalid input. Please enter Session Duration Hours (up to 10):")
+
+    # Calculate total seconds
+    total_seconds = math.floor(duration_hours * 60 * 60)
+    return total_seconds
+
     
 
 def assume_role_with_saml(role, principle, saml, count, display_name, region):
     stsclient = boto3.client('sts')
     try:
-        cred = stsclient.assume_role_with_saml(RoleArn=role, PrincipalArn=principle, SAMLAssertion=saml)
+        cred = stsclient.assume_role_with_saml(
+            RoleArn=role, PrincipalArn=principle, 
+            SAMLAssertion=saml, 
+            DurationSeconds=input_session_duration_time())
     except ClientError as e:
         print("Access Denied. Please check.. " + str(e))
         logging.info(str(e))
         return False
     write_cred(cred, count, display_name, region, role)
     return True
-    
