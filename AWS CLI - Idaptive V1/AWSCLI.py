@@ -67,10 +67,14 @@ def client_main():
 
     parser.add_argument("-tenant", "-t", help="Enter tenant url or name e.g. cloud.idaptive.com or cloud", default="cloud")
     parser.add_argument("-region", "-r", help="Enter AWS region. Default is us-west-2", default="us-west-2")
+    parser.add_argument("-duration", help="Session duration in seconds for AssumeRoleWithSAML. Default is 3600, max is 43200.", type=int, default=3600)
     parser.add_argument("-debug", "-d", help="This will make debug on", action="store_true")
     parser.add_argument("-version", "-v", action='version', version='Idaptive AWS CLI V1')
     args = parser.parse_args()
-    
+
+    if not (0 <= args.duration):
+        parser.error("-duration must be greater than 0 seconds (got {}).".format(args.duration))
+
     set_logging()
     
     try:
@@ -86,6 +90,7 @@ def client_main():
     session, user = login_instance(proxy, environment)
     
     region = args.region
+    duration = args.duration
     
     response = uprest.get_applications(user, session, environment, proxy)
     result = response["Result"]
@@ -132,7 +137,7 @@ def client_main():
             if (_quit == 'q'):
                 break;
             count = profilecount [int(number)-1]
-            assumed = assumerolesaml.assume_role_with_saml(awsinputs.role, awsinputs.provider, awsinputs.saml, count, display_name, region)
+            assumed = assumerolesaml.assume_role_with_saml(awsinputs.role, awsinputs.provider, awsinputs.saml, count, display_name, region, duration)
             if (assumed):
                 profilecount [int(number)-1] = count + 1
             if (_quit == 'one_role_quit'):
