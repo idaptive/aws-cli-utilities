@@ -48,10 +48,10 @@ def write_cred(cred, count, display_name, region, role):
 
     
 
-def assume_role_with_saml(role, principle, saml, count, display_name, region):
+def assume_role_with_saml(role, principle, saml, count, display_name, region, duration=3600):
     stsclient = boto3.client('sts')
     try:
-        cred = stsclient.assume_role_with_saml(RoleArn=role, PrincipalArn=principle, SAMLAssertion=saml)
+        cred = stsclient.assume_role_with_saml(RoleArn=role, PrincipalArn=principle, SAMLAssertion=saml, DurationSeconds=duration)
     except ClientError as e:
         print("Access Denied. Please check.. " + str(e))
         logging.info(str(e))
