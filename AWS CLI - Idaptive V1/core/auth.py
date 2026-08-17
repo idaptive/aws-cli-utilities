@@ -131,11 +131,21 @@ def handle_unix(mechanism, tenant_response, username, endpoint, method, environm
     else:
         print("Waiting for completing authentication mechanism.. ")
         json_req = request.get_adv_auth_json_poll()
+        number_shown = False
         while (True):
             authresp = call_rest_post(endpoint, method, json_req, headers, certpath, proxy, environment.get_debug())
             resp = AuthResponse(authresp, endpoint)
             success_result = resp.get_success_result()
             summary = resp.get_summary()
+            if not number_shown:
+                try:
+                    json_data = json.loads(authresp.text)
+                    generated_value = json_data.get('Result', {}).get('GeneratedAuthValue')
+                    if generated_value:
+                        print(Fore.CYAN + "\n>>> Match this number on your mobile app: " + Fore.YELLOW + str(generated_value) + Style.RESET_ALL + "\n")
+                        number_shown = True
+                except Exception:
+                    pass
             logging.info("Success : " + str(success_result) + " Summary : " + summary)
             if (success_result == True and summary != "OobPending"):
                 break
@@ -181,6 +191,13 @@ def handle_text_oob(mechanism, tenant_response, username, endpoint, method, prox
     headers = {}
     authresp = call_rest_post(endpoint, method, json_req, headers, certpath, proxy, environment.get_debug())
     logging.info("The response is StartOob req" + authresp.text)
+    try:
+        json_data = json.loads(authresp.text)
+        generated_value = json_data.get('Result', {}).get('GeneratedAuthValue')
+        if generated_value:
+            print(Fore.CYAN + "\n>>> Match this number on your mobile app: " + Fore.YELLOW + str(generated_value) + Style.RESET_ALL + "\n")
+    except Exception:
+        pass
     handle_unix(mechanism, tenant_response, username, endpoint, method, environment, proxy, request, json_req)
 
 def advance_auth_for_mech(mechanism, tenant_response, username, endpoint, method, proxy, environment):
