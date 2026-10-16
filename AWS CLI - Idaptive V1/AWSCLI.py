@@ -102,7 +102,20 @@ def client_main():
     for j in range (0, length):
         try:
             appinfo = {}
-            if (("AWS" in apps[j]["TemplateName"] or "Amazon" in apps[j]["TemplateName"]) and apps[j]["WebAppType"] != 'UsernamePassword'):
+            template = apps[j].get("TemplateName", "")
+            # Match commercial AWS apps AND eusc per-account apps.
+            # eusc accounts each have their own Idira app; their template names
+            # typically contain "EUSC" or "Sovereign".  They must NOT be accessed
+            # via the commercial "AWS Universal IDP" app — each requires its own
+            # dedicated app so the SAML assertion carries the correct issuer and
+            # arn:aws-eusc: ARNs that the eusc STS will accept.
+            is_aws_app = (
+                "AWS" in template
+                or "Amazon" in template
+                or "EUSC" in template
+                or "Sovereign" in template
+            )
+            if is_aws_app and apps[j]["WebAppType"] != 'UsernamePassword':
                 appinfo = apps[j]
                 logging.info(appinfo)
                 awsapps.append(appinfo)
