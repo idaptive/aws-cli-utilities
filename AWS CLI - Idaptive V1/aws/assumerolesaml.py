@@ -19,6 +19,19 @@ import configparser
 import sys
 import logging
 
+def _sts_client_for_region(region):
+    """Return a boto3 STS client pinned to *region*.
+
+    Passing region_name lets botocore resolve the correct regional STS
+    endpoint automatically for any AWS partition — including aws-eusc
+    (e.g. eusc-de-east-1 → sts.eusc-de-east-1.amazonaws.eu) — without
+    requiring any hardcoded endpoint URLs.  This mirrors what AWS CLI v2
+    does when --region is supplied.
+    """
+    logging.info('Creating STS client for region: %s', region)
+    return boto3.client('sts', region_name=region)
+
+
 def write_cred(cred, count, display_name, region, role):
     home = expanduser("~")
     print('home = ' + home)
@@ -49,7 +62,11 @@ def write_cred(cred, count, display_name, region, role):
     
 
 def assume_role_with_saml(role, principle, saml, count, display_name, region, duration=3600):
-    stsclient = boto3.client('sts')
+    # Pass region_name so botocore resolves the correct regional STS endpoint
+    # automatically — works for commercial, GovCloud, China, and aws-eusc
+    # (eusc-de-east-1 → sts.eusc-de-east-1.amazonaws.eu) without any
+    # hardcoded endpoint URLs.
+    stsclient = _sts_client_for_region(region)
     try:
         cred = stsclient.assume_role_with_saml(RoleArn=role, PrincipalArn=principle, SAMLAssertion=saml, DurationSeconds=duration)
     except ClientError as e:

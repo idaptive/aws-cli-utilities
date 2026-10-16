@@ -64,6 +64,17 @@ def call_app(session, appkey, version, environment, proxy):
         sys.exit()
     return encoded_saml
 
+# ---------------------------------------------------------------------------
+# SAML Role attribute URIs per AWS partition.
+# Commercial uses https://aws.amazon.com/SAML/Attributes/Role.
+# eusc Idira apps post to the eusc STS ACS and use the eusc-scoped URI.
+# ---------------------------------------------------------------------------
+_AWS_ROLE_SAML_ATTR_URIS = {
+    'https://aws.amazon.com/SAML/Attributes/Role',            # commercial (aws)
+    'https://aws.amazon.com.eusc.gov/SAML/Attributes/Role',   # EU Sovereign Cloud (aws-eusc)
+}
+
+
 def choose_role(encoded_saml, appkey):
     logging.info("Decoding SAML ....")
     decoded_saml = base64.b64decode(encoded_saml)
@@ -71,16 +82,33 @@ def choose_role(encoded_saml, appkey):
     root = ET.fromstring(decoded_saml)
     awsroles = []
     for saml2attribute in root.iter('{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'):
-        if (saml2attribute.get('Name') == 'https://aws.amazon.com/SAML/Attributes/Role'):
+        if (saml2attribute.get('Name') in _AWS_ROLE_SAML_ATTR_URIS):
             for saml2attributevalue in saml2attribute.iter('{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue'):
                 awsroles.append(saml2attributevalue.text)
-    
+
     allroles = []
     saml_provider = []
+    eusc_via_universal_idp = False
     for awsrole in awsroles:
         chunks = awsrole.split(',')
-        allroles.append(chunks[0]) 
-        saml_provider.append(chunks[1])
+        role_arn     = chunks[0]
+        provider_arn = chunks[1]
+        # Warn when arn:aws-eusc: roles appear inside a commercial Universal IDP
+        # SAML assertion — calling commercial STS with such a token always fails
+        # with "InvalidIdentityToken / Issuer not present in specified provider".
+        # The fix is to use the dedicated per-account eusc Idira app instead.
+        if ':aws-eusc:' in role_arn or ':aws-eusc:' in provider_arn:
+            eusc_via_universal_idp = True
+        allroles.append(role_arn)
+        saml_provider.append(provider_arn)
+
+    if eusc_via_universal_idp:
+        print(Fore.YELLOW)
+        print("WARNING: One or more roles belong to the AWS European Sovereign Cloud (aws-eusc).")
+        print("  eusc accounts do NOT federate through 'AWS Universal IDP'.")
+        print("  Please select the dedicated per-account eusc Idira app for this account.")
+        print("  Logging in via Universal IDP will always fail with InvalidIdentityToken.")
+        print(Style.RESET_ALL)
     
     printline()
     print(Fore.GREEN)
