@@ -19,6 +19,7 @@ from aws import assumerolesaml
 import logging
 from config import readconfig
 from core import uprest
+import os
 import re
 import sys
 import argparse
@@ -46,7 +47,14 @@ def login_instance(proxy, environment):
     return session, user
 
 def set_logging():
-    logging.basicConfig(handlers=[logging.FileHandler('aws-cli.log', 'w', 'utf-8')], level=logging.INFO, format='%(asctime)s %(filename)s %(funcName)s %(lineno)d %(message)s')
+    # Create the log readable by the owner only. It records account and role details.
+    old_umask = os.umask(0o077)
+    try:
+        handler = logging.FileHandler('aws-cli.log', 'w', 'utf-8')
+    finally:
+        os.umask(old_umask)
+    os.chmod('aws-cli.log', 0o600)  # an existing file keeps its old mode otherwise
+    logging.basicConfig(handlers=[handler], level=logging.INFO, format='%(asctime)s %(filename)s %(funcName)s %(lineno)d %(message)s')
     logging.info('Starting App..')
     print("Logfile - aws-cli.log")
     

@@ -29,7 +29,6 @@ class HtmlResponse(object):
         htmlparser.feed(self.html_response)
         saml = htmlparser.get_saml()
         htmlparser.clean()
-        logging.info("------------ SAML ---------------")
-        logging.info(saml)
+        logging.info("SAML assertion received: %d characters", len(saml))
         return saml
         

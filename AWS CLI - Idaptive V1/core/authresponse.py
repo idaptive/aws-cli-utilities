@@ -14,6 +14,7 @@
 
 import json
 import logging
+from core.redact import redact_json
 
 class AuthResponse(object):
     '''
@@ -24,7 +25,7 @@ class AuthResponse(object):
         self.tenant_url = tenant_url
         json_resp = json.loads(self.response.text)
         logging.info('------ Json Response from the REST call ---------')
-        logging.info(json_resp)
+        logging.info(redact_json(json_resp))
         logging.info('--------------------------------------------------')
         
                 
