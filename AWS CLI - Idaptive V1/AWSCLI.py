@@ -71,12 +71,19 @@ def client_main():
     parser.add_argument("-region", "-r", help="Enter AWS region. Default is us-west-2", default="us-west-2")
     parser.add_argument("-duration", help="Session duration in seconds for AssumeRoleWithSAML. Default is 3600, max is 43200.", type=int, default=3600)
     parser.add_argument("-no-account-names", dest="no_account_names", help="Do not look up account names from the AWS sign-in page. The role menu then shows role ARNs only.", action="store_true")
+    parser.add_argument("-app", help="App key of the AWS app to use. Skips the app menu.")
+    parser.add_argument("-role", action="append", default=[], metavar="ROLE_ARN", help="Role ARN to assume. Repeat for more roles. Skips the role menu: one login creates a profile for each role.")
+    parser.add_argument("-profile-name", dest="profile_name", default=samlapp.DEFAULT_PROFILE_NAME, help="Profile name template. Placeholders: {account} (account name, or ID if unknown), {account_id}, {role}. Default: %(default)s. Example: '{account}-{role}'.")
     parser.add_argument("-debug", "-d", help="This will make debug on", action="store_true")
     parser.add_argument("-version", "-v", action='version', version='Idaptive AWS CLI V1')
     args = parser.parse_args()
 
     if not (0 <= args.duration):
         parser.error("-duration must be greater than 0 seconds (got {}).".format(args.duration))
+    try:
+        samlapp.profile_name(args.profile_name, "arn:aws:iam::000000000000:role/check")
+    except (KeyError, IndexError, ValueError) as e:
+        parser.error("-profile-name has an unknown placeholder: {}".format(e))
 
     set_logging()
     
@@ -130,6 +137,35 @@ def client_main():
     if (len(awsapps) == 0):
         print("No AWS Applications to select for the user " + user)
         return
+
+    if args.app:
+        awsapps = [app for app in awsapps if app['AppKey'] == args.app]
+        if not awsapps:
+            print("No AWS app with key " + args.app + " is available to the user " + user)
+            sys.exit(1)
+
+    if args.role:
+        if len(awsapps) > 1:
+            print("-role needs a single AWS app. Add -app with one of these keys:")
+            for app in awsapps:
+                print("  " + app['AppKey'] + " : " + app['DisplayName'])
+            sys.exit(1)
+        app = awsapps[0]
+        encoded_saml = samlapp.call_app(session, app['AppKey'], "1.0", environment, proxy)
+        account_names = {}
+        if not args.no_account_names:
+            account_names = accountnames.get_account_names(
+                encoded_saml, base64.b64decode(encoded_saml), environment.get_certpath(), proxy)
+        failed = []
+        for count, awsinputs in enumerate(samlapp.find_roles(encoded_saml, args.role)):
+            name = samlapp.profile_name(args.profile_name, awsinputs.role, account_names)
+            if not assumerolesaml.assume_role_with_saml(awsinputs.role, awsinputs.provider, awsinputs.saml,
+                                                        count, app['DisplayName'], region, duration, name):
+                failed.append(awsinputs.role)
+        if failed:
+            print("Could not assume: " + ", ".join(failed))
+            sys.exit(1)
+        return
     
     pattern = re.compile("[^0-9.]")
     count = 1
@@ -157,7 +193,8 @@ def client_main():
             if (_quit == 'q'):
                 break;
             count = profilecount [int(number)-1]
-            assumed = assumerolesaml.assume_role_with_saml(awsinputs.role, awsinputs.provider, awsinputs.saml, count, display_name, region, duration)
+            name = samlapp.profile_name(args.profile_name, awsinputs.role, account_names)
+            assumed = assumerolesaml.assume_role_with_saml(awsinputs.role, awsinputs.provider, awsinputs.saml, count, display_name, region, duration, name)
             if (assumed):
                 profilecount [int(number)-1] = count + 1
             if (_quit == 'one_role_quit'):
