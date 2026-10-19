@@ -75,24 +75,73 @@ _AWS_ROLE_SAML_ATTR_URIS = {
 }
 
 
-def choose_role(encoded_saml, appkey):
+def role_label(role_arn, account_names):
+    """Return the menu label for a role ARN, with the account name if known."""
+    parts = role_arn.split(':')
+    if len(parts) < 6:
+        return role_arn
+    account_id = parts[4]
+    role_name = parts[5].split('/')[-1]
+    name = (account_names or {}).get(account_id)
+    if not name:
+        return role_arn
+    return '{} ({}) - {}'.format(name, account_id, role_name)
+
+
+DEFAULT_PROFILE_NAME = '{role}_profile'
+
+
+def profile_name(template, role_arn, account_names=None):
+    """Return the AWS profile name for a role, from a template.
+
+    Placeholders: {account} (the account name, or the account ID if the name
+    is not known), {account_id}, and {role} (the role name).
+    """
+    parts = role_arn.split(':')
+    account_id = parts[4] if len(parts) > 4 else ''
+    role_name = role_arn.split('/')[-1]
+    account = (account_names or {}).get(account_id) or account_id
+    return template.format(account=account, account_id=account_id, role=role_name)
+
+
+def parse_roles(encoded_saml):
+    """Return the (role ARN, SAML provider ARN) pairs in a SAML assertion."""
     logging.info("Decoding SAML ....")
     decoded_saml = base64.b64decode(encoded_saml)
-    logging.info(decoded_saml)
     root = ET.fromstring(decoded_saml)
-    awsroles = []
+    roles = []
     for saml2attribute in root.iter('{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'):
         if (saml2attribute.get('Name') in _AWS_ROLE_SAML_ATTR_URIS):
             for saml2attributevalue in saml2attribute.iter('{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue'):
-                awsroles.append(saml2attributevalue.text)
+                chunks = saml2attributevalue.text.split(',')
+                roles.append((chunks[0].strip(), chunks[1].strip()))
+    return roles
 
+
+def find_roles(encoded_saml, role_arns):
+    """Return AwsInputs for each requested role ARN, in the order given.
+
+    Exits with a message that lists the available roles if a requested role
+    is not in the assertion.
+    """
+    providers = dict(parse_roles(encoded_saml))
+    missing = [arn for arn in role_arns if arn not in providers]
+    if missing:
+        print(Fore.RED + 'These roles are not available to you in this app:')
+        for arn in missing:
+            print('  ' + arn)
+        print(Style.RESET_ALL + 'Available roles:')
+        for arn in providers:
+            print('  ' + arn)
+        sys.exit(1)
+    return [AwsInputs(arn, providers[arn], encoded_saml) for arn in role_arns]
+
+
+def choose_role(encoded_saml, appkey, account_names=None):
     allroles = []
     saml_provider = []
     eusc_via_universal_idp = False
-    for awsrole in awsroles:
-        chunks = awsrole.split(',')
-        role_arn     = chunks[0]
-        provider_arn = chunks[1]
+    for role_arn, provider_arn in parse_roles(encoded_saml):
         # Warn when arn:aws-eusc: roles appear inside a commercial Universal IDP
         # SAML assertion — calling commercial STS with such a token always fails
         # with "InvalidIdentityToken / Issuer not present in specified provider".
@@ -121,7 +170,7 @@ def choose_role(encoded_saml, appkey):
     if (len(allroles) > 1):
         i = 1
         for role in allroles:
-            print('[',i,']: ', role)
+            print('[',i,']: ', role_label(role, account_names))
             i = i+1
         try:
             inputstring = ""
@@ -134,14 +183,16 @@ def choose_role(encoded_saml, appkey):
             print('You have selected a wrong role..')
             sys.exit(0)
     else:
-        print('1: ' + allroles[0])
+        print('1: ' + role_label(allroles[0], account_names))
         print("Selecting above role. ")
         selection = 1
         
     role = allroles[selection-1]
     principle = saml_provider[selection-1]
     
-    print('You Chose : ', role)
+    print('You Chose : ', role_label(role, account_names))
+    if role_label(role, account_names) != role:
+        print('Role ARN : ', role)
     print('Your SAML Provider : ', principle)
         
     awsinputs = AwsInputs(role, principle, encoded_saml)

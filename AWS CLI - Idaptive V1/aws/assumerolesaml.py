@@ -32,15 +32,15 @@ def _sts_client_for_region(region):
     return boto3.client('sts', region_name=region)
 
 
-def write_cred(cred, count, display_name, region, role):
+def write_cred(cred, count, display_name, region, role, profile_name=None):
     home = expanduser("~")
     print('home = ' + home)
     cred_file = home + "/.aws/credentials"
     config = configparser.RawConfigParser()
     config.read(cred_file)
     print("Display Name : " + display_name)
-    rolesplit = role.split('/')
-    profile_name = rolesplit[1] + '_profile'
+    if not profile_name:
+        profile_name = role.split('/')[-1] + '_profile'
     section = profile_name 
     if not config.has_section(section):
         config.add_section(section)
@@ -61,7 +61,7 @@ def write_cred(cred, count, display_name, region, role):
 
     
 
-def assume_role_with_saml(role, principle, saml, count, display_name, region, duration=3600):
+def assume_role_with_saml(role, principle, saml, count, display_name, region, duration=3600, profile_name=None):
     # Pass region_name so botocore resolves the correct regional STS endpoint
     # automatically — works for commercial, GovCloud, China, and aws-eusc
     # (eusc-de-east-1 → sts.eusc-de-east-1.amazonaws.eu) without any
@@ -73,6 +73,6 @@ def assume_role_with_saml(role, principle, saml, count, display_name, region, du
         print("Access Denied. Please check.. " + str(e))
         logging.info(str(e))
         return False
-    write_cred(cred, count, display_name, region, role)
+    write_cred(cred, count, display_name, region, role, profile_name)
     return True
     
