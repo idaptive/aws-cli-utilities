@@ -15,7 +15,9 @@
 #Version 8.1
 from core import auth
 from core import samlapp
+from core import accountnames
 from aws import assumerolesaml
+import base64
 import logging
 from config import readconfig
 from core import uprest
@@ -68,6 +70,7 @@ def client_main():
     parser.add_argument("-tenant", "-t", help="Enter tenant url or name e.g. cloud.idaptive.com or cloud", default="cloud")
     parser.add_argument("-region", "-r", help="Enter AWS region. Default is us-west-2", default="us-west-2")
     parser.add_argument("-duration", help="Session duration in seconds for AssumeRoleWithSAML. Default is 3600, max is 43200.", type=int, default=3600)
+    parser.add_argument("-no-account-names", dest="no_account_names", help="Do not look up account names from the AWS sign-in page. The role menu then shows role ARNs only.", action="store_true")
     parser.add_argument("-debug", "-d", help="This will make debug on", action="store_true")
     parser.add_argument("-version", "-v", action='version', version='Idaptive AWS CLI V1')
     args = parser.parse_args()
@@ -145,8 +148,12 @@ def client_main():
         display_name = awsapps[int(number)-1]['DisplayName']
         print("Calling app with key : " + appkey)
         encoded_saml = samlapp.call_app(session, appkey, "1.0", environment, proxy)
+        account_names = {}
+        if not args.no_account_names:
+            account_names = accountnames.get_account_names(
+                encoded_saml, base64.b64decode(encoded_saml), environment.get_certpath(), proxy)
         while(True):
-            _quit, awsinputs = samlapp.choose_role(encoded_saml, appkey)
+            _quit, awsinputs = samlapp.choose_role(encoded_saml, appkey, account_names)
             if (_quit == 'q'):
                 break;
             count = profilecount [int(number)-1]

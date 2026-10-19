@@ -75,7 +75,20 @@ _AWS_ROLE_SAML_ATTR_URIS = {
 }
 
 
-def choose_role(encoded_saml, appkey):
+def role_label(role_arn, account_names):
+    """Return the menu label for a role ARN, with the account name if known."""
+    parts = role_arn.split(':')
+    if len(parts) < 6:
+        return role_arn
+    account_id = parts[4]
+    role_name = parts[5].split('/')[-1]
+    name = (account_names or {}).get(account_id)
+    if not name:
+        return role_arn
+    return '{} ({}) - {}'.format(name, account_id, role_name)
+
+
+def choose_role(encoded_saml, appkey, account_names=None):
     logging.info("Decoding SAML ....")
     decoded_saml = base64.b64decode(encoded_saml)
     logging.info(decoded_saml)
@@ -121,7 +134,7 @@ def choose_role(encoded_saml, appkey):
     if (len(allroles) > 1):
         i = 1
         for role in allroles:
-            print('[',i,']: ', role)
+            print('[',i,']: ', role_label(role, account_names))
             i = i+1
         try:
             inputstring = ""
@@ -134,14 +147,16 @@ def choose_role(encoded_saml, appkey):
             print('You have selected a wrong role..')
             sys.exit(0)
     else:
-        print('1: ' + allroles[0])
+        print('1: ' + role_label(allroles[0], account_names))
         print("Selecting above role. ")
         selection = 1
         
     role = allroles[selection-1]
     principle = saml_provider[selection-1]
     
-    print('You Chose : ', role)
+    print('You Chose : ', role_label(role, account_names))
+    if role_label(role, account_names) != role:
+        print('Role ARN : ', role)
     print('Your SAML Provider : ', principle)
         
     awsinputs = AwsInputs(role, principle, encoded_saml)
