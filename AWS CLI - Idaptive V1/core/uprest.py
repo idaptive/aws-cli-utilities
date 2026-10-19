@@ -24,6 +24,5 @@ def get_applications(user, session, environment, proxy):
     session_token = "Bearer "+session.session_token
     headers['Authorization'] = session_token
     response = restclient.call_rest_post(session.endpoint, method, body, headers, environment.get_certpath(), proxy,environment.get_debug())
-    logging.info(response.text)
     return response.json()
 

@@ -16,6 +16,7 @@ import requests
 import logging
 import sys, traceback, trace
 from colorama import Fore, Back, Style
+from core.redact import redact_body, redact_headers
     
 def call_rest_post(endpoint, method, body, headers, certpath, proxy, debug):
     endpoint = endpoint+method
@@ -28,9 +29,9 @@ def call_rest_post(endpoint, method, body, headers, certpath, proxy, debug):
 
     headers['User-Agent'] = "CyberArkIdentity-AWS-Cli"
 
-    logging.info("Calling " + endpoint + " with headers : " + str(headers))
+    logging.info("Calling " + endpoint + " with headers : " + str(redact_headers(headers)))
     if (debug):
-        logging.info("Request : " + str(body))
+        logging.info("Request : " + redact_body(body))
     
     try :
         response = requests.post(endpoint, headers=headers, verify=certpath, proxies=proxy, data=body)
@@ -40,7 +41,7 @@ def call_rest_post(endpoint, method, body, headers, certpath, proxy, debug):
         print(Style.RESET_ALL)
         sys.exit(0)
     
-    logging.info("Received Response : " + response.text)
+    logging.info("Received Response : " + redact_body(response.text))
     return response
 
 #Following method is not used currently. It will be used if redirects are needed.
@@ -53,9 +54,8 @@ def call_rest_post_redirect(endpoint, method, body, headers, certpath, proxy, al
         headers['cache-control'] = "no-cache"
     endpoint = endpoint+method
     logging.info("Calling " + endpoint)
-    logging.info("Method : " + method + " Request Body : " + str(body) + " Headers : " + str(headers) + " Proxy : " + str(proxy))
-    logging.info("Calling " + endpoint + " with headers : " + str(headers) + " and data : " + str(body))
+    logging.info("Method : " + method + " Request Body : " + redact_body(body) + " Headers : " + str(redact_headers(headers)))
     response = requests.post(endpoint, headers=headers, verify=certpath, proxies=proxy, data=body)
-    logging.info("Received Response : " + response.text)
+    logging.info("Received Response : " + redact_body(response.text))
     return response
     

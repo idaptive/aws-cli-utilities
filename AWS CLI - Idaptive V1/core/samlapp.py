@@ -54,8 +54,6 @@ def handle_app_click(session, appkey, version, environment, proxy):
 def call_app(session, appkey, version, environment, proxy):
     response = handle_app_click(session, appkey, version, environment, proxy)
     html_response = HtmlResponse(response.text)
-    logging.info("------------------- App Response ----------------")
-    logging.info(html_response)
     encoded_saml = html_response.get_saml()
     if (encoded_saml == ''):
         logging.info('Did not receive SAML response. Please check if you have chosen Saml App')
@@ -78,7 +76,6 @@ _AWS_ROLE_SAML_ATTR_URIS = {
 def choose_role(encoded_saml, appkey):
     logging.info("Decoding SAML ....")
     decoded_saml = base64.b64decode(encoded_saml)
-    logging.info(decoded_saml)
     root = ET.fromstring(decoded_saml)
     awsroles = []
     for saml2attribute in root.iter('{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'):

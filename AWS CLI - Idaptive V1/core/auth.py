@@ -190,7 +190,7 @@ def handle_text_oob(mechanism, tenant_response, username, endpoint, method, prox
     json_req = request.get_adv_auth_json_startoob()
     headers = {}
     authresp = call_rest_post(endpoint, method, json_req, headers, certpath, proxy, environment.get_debug())
-    logging.info("The response is StartOob req" + authresp.text)
+    logging.info("StartTextOob response received")
     try:
         json_data = json.loads(authresp.text)
         generated_value = json_data.get('Result', {}).get('GeneratedAuthValue')
@@ -243,7 +243,7 @@ def advance_auth_for_mech(mechanism, tenant_response, username, endpoint, method
         logging.info(summary)
     if (success_result == True and summary == "LoginSuccess"):
         session_token = authresp.cookies['.ASPXAUTH']
-        logging.info(session_token)
+        logging.info("Session token received")
         session = AuthSession(endpoint, username, session_id, session_token)
         return session
     
