@@ -18,16 +18,71 @@ from os.path import expanduser
 import configparser
 import sys
 import logging
+import base64
+import re
+import xml.etree.ElementTree as ET
 
-def _sts_client_for_region(region):
-    """Return a boto3 STS client pinned to *region*.
+EUSC_DEFAULT_REGION = 'eusc-de-east-1'
+_EUSC_ACS_REGION_RE = re.compile(r'https?://([a-z0-9-]+)\.signin\.amazonaws-eusc\.eu\b', re.IGNORECASE)
 
-    Passing region_name lets botocore resolve the correct regional STS
-    endpoint automatically for any AWS partition — including aws-eusc
-    (e.g. eusc-de-east-1 → sts.eusc-de-east-1.amazonaws.eu) — without
-    requiring any hardcoded endpoint URLs.  This mirrors what AWS CLI v2
-    does when --region is supplied.
+
+def _extract_eusc_region_from_saml(encoded_saml):
+    if not encoded_saml:
+        return None
+    try:
+        decoded_saml = base64.b64decode(encoded_saml)
+        root = ET.fromstring(decoded_saml)
+        candidates = [root.get('Destination') or '']
+        for elem in root.iter('{urn:oasis:names:tc:SAML:2.0:assertion}SubjectConfirmationData'):
+            if elem.get('Recipient'):
+                candidates.append(elem.get('Recipient'))
+        for url in candidates:
+            match = _EUSC_ACS_REGION_RE.search(url)
+            if match:
+                return match.group(1).lower()
+            if 'amazonaws-eusc.eu' in url.lower() or 'amazonaws.eu' in url.lower():
+                return EUSC_DEFAULT_REGION
+    except Exception:
+        pass
+    return None
+
+
+def _resolve_eusc_parameters(role, principle, region, saml=None):
+    saml_eusc_region = _extract_eusc_region_from_saml(saml)
+    is_eusc = (
+        ':aws-eusc:' in (role or '')
+        or ':aws-eusc:' in (principle or '')
+        or (region or '').lower().startswith('eusc-')
+        or saml_eusc_region is not None
+    )
+    if not is_eusc:
+        return role, principle, region, None
+
+    if role and role.startswith('arn:aws:iam::'):
+        role = 'arn:aws-eusc:iam::' + role[len('arn:aws:iam::'):]
+    if principle and principle.startswith('arn:aws:iam::'):
+        principle = 'arn:aws-eusc:iam::' + principle[len('arn:aws:iam::'):]
+
+    if region and region.lower().startswith('eusc-'):
+        effective_region = region.lower()
+    else:
+        effective_region = saml_eusc_region or EUSC_DEFAULT_REGION
+
+    endpoint_url = 'https://sts.{}.amazonaws.eu'.format(effective_region)
+    return role, principle, effective_region, endpoint_url
+
+
+def _sts_client_for_region(region, endpoint_url=None):
+    """Return a boto3 STS client pinned to *region* (and explicit *endpoint_url* when needed).
+
+    For AWS European Sovereign Cloud (aws-eusc), explicitly targeting
+    https://sts.<region>.amazonaws.eu (e.g. https://sts.eusc-de-east-1.amazonaws.eu)
+    ensures AssumeRoleWithSAML reaches the EUSC STS endpoint even on older
+    botocore releases that predate the aws-eusc partition definition.
     """
+    if endpoint_url:
+        logging.info('Creating STS client for region: %s (endpoint_url=%s)', region, endpoint_url)
+        return boto3.client('sts', region_name=region, endpoint_url=endpoint_url)
     logging.info('Creating STS client for region: %s', region)
     return boto3.client('sts', region_name=region)
 
@@ -62,17 +117,13 @@ def write_cred(cred, count, display_name, region, role):
     
 
 def assume_role_with_saml(role, principle, saml, count, display_name, region, duration=3600):
-    # Pass region_name so botocore resolves the correct regional STS endpoint
-    # automatically — works for commercial, GovCloud, China, and aws-eusc
-    # (eusc-de-east-1 → sts.eusc-de-east-1.amazonaws.eu) without any
-    # hardcoded endpoint URLs.
-    stsclient = _sts_client_for_region(region)
+    role, principle, effective_region, endpoint_url = _resolve_eusc_parameters(role, principle, region, saml)
+    stsclient = _sts_client_for_region(effective_region, endpoint_url=endpoint_url)
     try:
         cred = stsclient.assume_role_with_saml(RoleArn=role, PrincipalArn=principle, SAMLAssertion=saml, DurationSeconds=duration)
     except ClientError as e:
         print("Access Denied. Please check.. " + str(e))
         logging.info(str(e))
         return False
-    write_cred(cred, count, display_name, region, role)
+    write_cred(cred, count, display_name, effective_region, role)
     return True
-    
