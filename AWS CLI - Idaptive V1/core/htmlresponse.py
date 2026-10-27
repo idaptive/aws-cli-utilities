@@ -32,4 +32,9 @@ class HtmlResponse(object):
         logging.info("------------ SAML ---------------")
         logging.info(saml)
         return saml
+
+    def get_error(self):
+        htmlparser = SamlHtmlParser()
+        htmlparser.feed(self.html_response)
+        return htmlparser.get_error()
         

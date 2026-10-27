@@ -28,12 +28,14 @@ from core.authresponse import AuthResponse
 from colorama import Fore, Style
 
 
-def handle_app_click(session, appkey, version, environment, proxy):
+def handle_app_click(session, appkey, version, environment, proxy, user_agent=None):
     method = "/uprest/handleAppClick?appkey=" + appkey
     body = {}
     headers = {}
     session_token = "Bearer "+session.session_token
     headers['Authorization'] = session_token
+    if user_agent:
+        headers['User-Agent'] = user_agent
     response = restclient.call_rest_post(session.endpoint, method, body, headers, environment.get_certpath(), proxy, environment.get_debug())
     logging.info("Call App Response URL : " + response.url)
     if ('elevate' in response.url):
@@ -51,56 +53,110 @@ def handle_app_click(session, appkey, version, environment, proxy):
         logging.info("Call App Response URL - After Elevate : " + response.url)
     return response
 
-def call_app(session, appkey, version, environment, proxy):
-    response = handle_app_click(session, appkey, version, environment, proxy)
+def call_app(session, appkey, version, environment, proxy, user_agent=None):
+    response = handle_app_click(session, appkey, version, environment, proxy, user_agent)
     html_response = HtmlResponse(response.text)
     logging.info("------------------- App Response ----------------")
     logging.info(html_response)
     encoded_saml = html_response.get_saml()
     if (encoded_saml == ''):
-        logging.info('Did not receive SAML response. Please check if you have chosen Saml App')
-        print('Did not receive SAML response. Please check if you have chosen Saml App')
-        print('Exiting..')
-        sys.exit()
+        error_title, error_text = html_response.get_error()
+        logging.info('Did not receive SAML response. Response URL: %s, server error: %s %s',
+        getattr(response, 'url', ''), error_title, error_text)
+        print(Fore.RED + 'Did not receive SAML response from app (' + str(appkey) + ').')
+        if error_title or error_text:
+            print('  Identity returned: ' + ' - '.join(part for part in (error_title, error_text) if part))
+        if getattr(response, 'url', '') and 'handleAppClick' not in response.url:
+            print('  Redirected to: ' + str(response.url))
+        if not (error_title or error_text):
+            print('  Please check aws-cli.log ("Received Response") for the server reply.')
+        print(Style.RESET_ALL)
+        return ''
     return encoded_saml
 
 # ---------------------------------------------------------------------------
 # SAML Role attribute URIs per AWS partition.
-# Commercial uses https://aws.amazon.com/SAML/Attributes/Role.
-# eusc Idira apps post to the eusc STS ACS and use the eusc-scoped URI.
+# Commercial and aws-eusc SAML federation use https://aws.amazon.com/SAML/Attributes/Role.
 # ---------------------------------------------------------------------------
 _AWS_ROLE_SAML_ATTR_URIS = {
-    'https://aws.amazon.com/SAML/Attributes/Role',            # commercial (aws)
-    'https://aws.amazon.com.eusc.gov/SAML/Attributes/Role',   # EU Sovereign Cloud (aws-eusc)
+    'https://aws.amazon.com/SAML/Attributes/Role',            # commercial (aws) & EU Sovereign Cloud (aws-eusc)
+    'https://aws.amazon.com.eusc.gov/SAML/Attributes/Role',   # fallback EUSC attribute URI
 }
 
 
-def choose_role(encoded_saml, appkey):
-    logging.info("Decoding SAML ....")
+def _extract_saml_acs_url(root):
+    destination = root.get('Destination')
+    if destination:
+        return destination.strip()
+    for elem in root.iter('{urn:oasis:names:tc:SAML:2.0:assertion}SubjectConfirmationData'):
+        recipient = elem.get('Recipient')
+        if recipient:
+            return recipient.strip()
+    return ''
+
+
+def _is_eusc_acs_url(acs_url):
+    acs_lower = (acs_url or '').lower()
+    return (
+        'amazonaws-eusc.eu' in acs_lower
+        or 'amazonaws.eu' in acs_lower
+        or 'eusc-' in acs_lower
+    )
+
+
+def _normalize_eusc_arn(arn):
+    if arn and arn.startswith('arn:aws:iam::'):
+        return 'arn:aws-eusc:iam::' + arn[len('arn:aws:iam::'):]
+    return arn
+
+
+def extract_roles(encoded_saml):
     decoded_saml = base64.b64decode(encoded_saml)
     logging.info(decoded_saml)
     root = ET.fromstring(decoded_saml)
+    acs_url = _extract_saml_acs_url(root)
+    is_eusc_acs = _is_eusc_acs_url(acs_url)
+
     awsroles = []
     for saml2attribute in root.iter('{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'):
         if (saml2attribute.get('Name') in _AWS_ROLE_SAML_ATTR_URIS):
             for saml2attributevalue in saml2attribute.iter('{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue'):
-                awsroles.append(saml2attributevalue.text)
+                if saml2attributevalue.text:
+                    awsroles.append(saml2attributevalue.text.strip())
 
     allroles = []
     saml_provider = []
     eusc_via_universal_idp = False
     for awsrole in awsroles:
-        chunks = awsrole.split(',')
-        role_arn     = chunks[0]
-        provider_arn = chunks[1]
-        # Warn when arn:aws-eusc: roles appear inside a commercial Universal IDP
-        # SAML assertion — calling commercial STS with such a token always fails
-        # with "InvalidIdentityToken / Issuer not present in specified provider".
-        # The fix is to use the dedicated per-account eusc Idira app instead.
-        if ':aws-eusc:' in role_arn or ':aws-eusc:' in provider_arn:
+        chunks = [c.strip() for c in awsrole.split(',') if c.strip()]
+        if len(chunks) < 2:
+            continue
+        if ':saml-provider/' in chunks[0]:
+            provider_arn, role_arn = chunks[0], chunks[1]
+        else:
+            role_arn, provider_arn = chunks[0], chunks[1]
+
+        if is_eusc_acs or ':aws-eusc:' in role_arn or ':aws-eusc:' in provider_arn:
+            role_arn = _normalize_eusc_arn(role_arn)
+            provider_arn = _normalize_eusc_arn(provider_arn)
+
+        # Warn only when an aws-eusc role is federated through a non-EUSC
+        # (commercial Universal IDP) SAML destination.
+        if (':aws-eusc:' in role_arn or ':aws-eusc:' in provider_arn) and not is_eusc_acs:
             eusc_via_universal_idp = True
         allroles.append(role_arn)
         saml_provider.append(provider_arn)
+
+    return allroles, saml_provider, eusc_via_universal_idp
+
+
+def choose_role(encoded_saml, appkey):
+    logging.info("Decoding SAML ....")
+    allroles, saml_provider, eusc_via_universal_idp = extract_roles(encoded_saml)
+
+    if len(allroles) == 0:
+        print(Fore.RED + "No AWS roles found in SAML assertion for app: " + str(appkey) + Style.RESET_ALL)
+        return 'q', None
 
     if eusc_via_universal_idp:
         print(Fore.YELLOW)

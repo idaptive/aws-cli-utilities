@@ -51,22 +51,74 @@ def set_logging():
     print("Logfile - aws-cli.log")
     
 
+def _get_app_key(app):
+    return (app.get("AppKey") or app.get("_RowKey") or "").strip()
+
+
+def _get_app_display_name(app):
+    return (app.get("DisplayName") or app.get("Name") or "").strip()
+
+
 def select_app(awsapps):
     print("Select the aws app to login. Type 'quit' or 'q' to exit")
     count = 1
     for app in awsapps:
-        print(str(count) + " : " + app['DisplayName'] + " | " + app['AppKey'])
+        print(str(count) + " : " + _get_app_display_name(app) + " | " + _get_app_key(app))
         count = count+1
     if (len(awsapps) == 1):
         return "1"
     return input("Enter Number : ")
 
              
+def _is_aws_or_eusc_app(app):
+    if app.get("WebAppType") == 'UsernamePassword':
+        return False
+    template = (app.get("TemplateName") or "").strip()
+    display_name = _get_app_display_name(app)
+    name = (app.get("Name") or "").strip()
+    app_url = (app.get("Url") or "").strip().lower()
+    description = (app.get("Description") or "").strip().lower()
+
+    keywords = ("aws", "amazon", "eusc", "sovereign")
+    text_fields = (template.lower(), display_name.lower(), name.lower(), description)
+    if any(k in field for field in text_fields for k in keywords):
+        return True
+    if any(domain in app_url for domain in ("amazonaws-eusc.eu", "amazonaws.eu", "signin.aws.amazon.com", "amazonaws.com")):
+        return True
+    return False
+
+
+def _matches_requested_app(app, requested):
+    if app.get("WebAppType") == 'UsernamePassword':
+        return False
+    target = requested.strip().lower()
+    app_key = _get_app_key(app).lower()
+    display_name = (app.get("DisplayName") or "").strip().lower()
+    name = (app.get("Name") or "").strip().lower()
+    return (
+        target == app_key
+        or target == display_name
+        or target == name
+        or target in display_name
+        or target in name
+    )
+
+
+DEFAULT_BROWSER_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+)
+
+
 def client_main():
     parser = argparse.ArgumentParser(prog="AWSCLI", description="Enter your Identity Provider Credentials and choose AWS Role to create AWS Profile. Use this AWS Profile to run AWS commands.")
 
     parser.add_argument("-tenant", "-t", help="Enter tenant url or name e.g. cloud.idaptive.com or cloud", default="cloud")
-    parser.add_argument("-region", "-r", help="Enter AWS region. Default is us-west-2", default="us-west-2")
+    parser.add_argument("-region", "-r", help="Enter AWS region. Default is us-west-2 (auto-set to eusc-de-east-1 for aws-eusc)", default="us-west-2")
+    parser.add_argument("-app", "--app", "-a", help="Select AWS/EUSC app by AppKey or DisplayName (tile name)", default=None)
+    parser.add_argument("--list", "-list", "-l", help="List available AWS/EUSC apps and roles", action="store_true")
+    parser.add_argument("-useragent", "--user-agent", dest="useragent", nargs="?", const=DEFAULT_BROWSER_USER_AGENT, default=None,
+                        help="User-Agent sent when launching the app (handleAppClick). Without a value, a desktop Chrome User-Agent is used. Default is the CLI User-Agent.")
     parser.add_argument("-duration", help="Session duration in seconds for AssumeRoleWithSAML. Default is 3600, max is 43200.", type=int, default=3600)
     parser.add_argument("-debug", "-d", help="This will make debug on", action="store_true")
     parser.add_argument("-version", "-v", action='version', version='Idaptive AWS CLI V1')
@@ -99,33 +151,53 @@ def client_main():
     logging.info("Apps : " + str(apps))
     length = len(apps)
     awsapps = []
-    for j in range (0, length):
-        try:
-            appinfo = {}
-            template = apps[j].get("TemplateName", "")
-            # Match commercial AWS apps AND eusc per-account apps.
-            # eusc accounts each have their own Idira app; their template names
-            # typically contain "EUSC" or "Sovereign".  They must NOT be accessed
-            # via the commercial "AWS Universal IDP" app — each requires its own
-            # dedicated app so the SAML assertion carries the correct issuer and
-            # arn:aws-eusc: ARNs that the eusc STS will accept.
-            is_aws_app = (
-                "AWS" in template
-                or "Amazon" in template
-                or "EUSC" in template
-                or "Sovereign" in template
+    if args.app:
+        target = args.app.strip().lower()
+        exact_matches = [
+            app for app in apps
+            if app.get("WebAppType") != 'UsernamePassword'
+            and target in (
+                _get_app_key(app).lower(),
+                (app.get("DisplayName") or "").strip().lower(),
+                (app.get("Name") or "").strip().lower(),
             )
-            if is_aws_app and apps[j]["WebAppType"] != 'UsernamePassword':
-                appinfo = apps[j]
-                logging.info(appinfo)
-                awsapps.append(appinfo)
-        except KeyError:
-            continue
+        ]
+        if exact_matches:
+            awsapps = exact_matches
+        else:
+            awsapps = [app for app in apps if _matches_requested_app(app, args.app)]
+    else:
+        for j in range(0, length):
+            try:
+                if _is_aws_or_eusc_app(apps[j]):
+                    appinfo = apps[j]
+                    logging.info(appinfo)
+                    awsapps.append(appinfo)
+            except KeyError:
+                continue
 
     logging.info("AWSapps : " + str(awsapps))
     
     if (len(awsapps) == 0):
-        print("No AWS Applications to select for the user " + user)
+        if args.app:
+            print("No AWS/SAML Application found matching '" + args.app + "' for user " + user)
+        else:
+            print("No AWS Applications to select for the user " + user)
+        return
+
+    if args.list:
+        for app in awsapps:
+            appkey = _get_app_key(app)
+            display_name = _get_app_display_name(app)
+            print(display_name + " | " + appkey)
+            encoded_saml = samlapp.call_app(session, appkey, "1.0", environment, proxy, args.useragent)
+            if not encoded_saml:
+                continue
+            roles, providers, _ = samlapp.extract_roles(encoded_saml)
+            for idx, role_arn in enumerate(roles):
+                print("  Role: " + role_arn + " | Provider: " + providers[idx])
+        logging.info("Done")
+        logging.shutdown()
         return
     
     pattern = re.compile("[^0-9.]")
@@ -141,10 +213,14 @@ def client_main():
         if (int(number) - 1 >= len(awsapps)):
             continue
         
-        appkey = awsapps[int(number)-1]['AppKey']
-        display_name = awsapps[int(number)-1]['DisplayName']
+        appkey = _get_app_key(awsapps[int(number)-1])
+        display_name = _get_app_display_name(awsapps[int(number)-1])
         print("Calling app with key : " + appkey)
-        encoded_saml = samlapp.call_app(session, appkey, "1.0", environment, proxy)
+        encoded_saml = samlapp.call_app(session, appkey, "1.0", environment, proxy, args.useragent)
+        if not encoded_saml:
+            if len(awsapps) == 1:
+                break
+            continue
         while(True):
             _quit, awsinputs = samlapp.choose_role(encoded_saml, appkey)
             if (_quit == 'q'):
