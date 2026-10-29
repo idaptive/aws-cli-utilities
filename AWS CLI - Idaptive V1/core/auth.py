@@ -78,21 +78,23 @@ def advance_authentication(tenant_response, endpoint, username, version, proxy, 
         logging.info("There are " + str(total_mechanism) + " mechanisms")
         
         if (total_mechanism > 1):
-            again = True
-            while(again):
-                for key, value in challenge.items():
-                    count = 1
-                    for mechanism in value:
-                        print(str(count) + " : " + mechanism['PromptSelectMech'])
-                        count = count + 1
-                    choice = input("Please choose the mechanism : ")
+            # Iterate the 'Mechanisms' list only, not challenge.items().
+            mechanisms = challenge['Mechanisms']
+            while True:
+                for count, mechanism in enumerate(mechanisms, start=1):
+                    # Some mechanisms have no 'PromptSelectMech' key.
+                    label = (mechanism.get('PromptSelectMech')
+                             or mechanism.get('PromptMechChosen')
+                             or mechanism.get('Name', 'Unknown'))
+                    print(str(count) + " : " + label)
+                choice = input("Please choose the mechanism : ")
                 try:
-                    if (int(choice) >= count or int(choice) <= 0):
-                        continue
+                    index = int(choice)
                 except ValueError:
                     continue
-                mechanism = value[int(choice)-1]
-                again = False
+                if 1 <= index <= len(mechanisms):
+                    mechanism = mechanisms[index - 1]
+                    break
         else:
             mechanism = challenge['Mechanisms'][0]
         logging.info("Mechanism is " + str(mechanism))
